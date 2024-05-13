@@ -6,6 +6,9 @@ SECTION MBR vstart=0x7c00
 	mov 	ss,ax
 	mov 	fs,ax
 	mov 	sp,0x7c00
+	
+	mov 	ax,0xb800 		;add to operate the graphics memory,and 0xb8000 is the begining of the graphics memory 
+	mov	gs,ax			
 
 ;clear the screen: use the 0x10 interrupt
 ;input:
@@ -22,26 +25,19 @@ SECTION MBR vstart=0x7c00
 	
 	int 	0x10
 	
-;the tree line is to get the position of cursor
-	mov	ah,3
-	mov	bh,0
-	
-	int 	0x10
-
-;begin to print the string,still use the 0x10 interrupt,but the function number is 0x13
-	mov 	ax,message
-	mov 	bp,ax			;es:bp is the begin of this string
-	
-	mov 	cx,5			;the length of this string
-	mov	ax,0x1301		;AH is to set the function number(0x13) ,AL is to set the method of write string
-	mov 	bx,0x2			;BH is to set the number of which page to print string,BL is to set the attribute of string
-	
-	int 	0x10
-
+	mov	byte	[gs:0x00],'1'
+	mov	byte	[gs:0x01],0xA4
+	mov	byte	[gs:0x02],' '
+	mov	byte	[gs:0x03],0xA4
+	mov	byte	[gs:0x04],'M'
+	mov	byte	[gs:0x05],0xA4
+	mov	byte	[gs:0x06],'B'
+	mov	byte	[gs:0x07],0xA4
+	mov	byte	[gs:0x08],'R'
+	mov	byte	[gs:0x09],0xA4
 	jmp	$			;make this program stay here
 	
 
-	message db "1 MBR"
 	times 510-($-$$) db 0
 	db 	0x55,0xaa
 
