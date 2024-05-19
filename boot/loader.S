@@ -1,6 +1,6 @@
 %include	"boot.inc"
 section	loader	vstart=LOADER_BASE_ADDR
-LOADER_STAcK_TOP	equ	LOADER_BASE_ADDR
+LOADER_STACK_TOP	equ	LOADER_BASE_ADDR
 jmp	loader_start
 
 GDT_BASE:	dd	0x00000000			;this is 0th descriptor
@@ -44,7 +44,7 @@ loader_start:
 	or	al,0000_0010B
 	out	0x92,al
 
-	ldtr	[gdt_ptr]
+	lgdt	[gdt_ptr]
 	
 	mov	eax,cr0
 	or	eax,0x00000001
