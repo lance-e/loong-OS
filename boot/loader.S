@@ -1,7 +1,6 @@
 %include	"boot.inc"
 section	loader	vstart=LOADER_BASE_ADDR
 LOADER_STACK_TOP	equ	LOADER_BASE_ADDR
-jmp	loader_start
 
 GDT_BASE:	dd	0x00000000			;this is 0th descriptor
 		dd	0x00000000
@@ -20,21 +19,86 @@ SELECTOR_CODE	equ	(0x0001 << 3 ) + TI_GDT + RPL0
 SELECTOR_DATA	equ	(0x0002 << 3 ) + TI_GDT + RPL0
 SELECTOR_VIDEO	equ	(0x0003 << 3 ) + TI_GDT + RPL0
 
-gdt_ptr		dw	GDT_LIMIT
+total_mem_bytes	dd	0				;!!!save the total memory capacity
+
+gdt_ptr		dw	GDT_LIMIT			;the pointer of GDT
 		dd	GDT_BASE
-loadermsg	db	"going to the loader"
 	
+ards_buf	times	244	db	0		;in order to memory alignment 
+ards_nr		dw	0				;record the number of ARDS
 loader_start:
-	;print the string
+	;get the physic memory
+	xor	ebx,ebx					;EBX:set the ebx = 0 
+	mov	edx,0x534d4150				;EDX:the ascii of SMAP
+	mov	di,ards_buf				;DI:set the buffer of ARDS
 
-	mov	sp,LOADER_BASE_ADDR
-	mov	bp,loadermsg
-	mov	cx,19
-	mov	ax,0x1301
-	mov	bx,0x001f
-	mov	dx,0x1800
-	int	0x10
+;---------------------int 0x15 eax=0xe820------------------------
+.e820_mem_get_loop:
+	mov	eax,0x0000e820				;EAX:set the function number is 0xe820 per loop,because of the EAX will update to the 0x534d4150 after eachinterruption 
+	mov	ecx,20					;ECX:set the size of ARDS
+	int	0x15				
+	jc	.e820_failed_so_try_e801	
+	
+	add	di,cx					;add 20 byte that make the di point to the next ARDS
+	inc	word	[ards_nr]			;record the number of the ARDS
+	cmp	ebx,0					;if the ebx = 0 and the cf != 1 mean that the ARDS are all return.this one is the last one
+	jnz	.e820_mem_get_loop
 
+	;calculate the memory capacity 
+	mov	cx,[ards_nr]
+	mov	ebx,ards_buf
+	xor	edx,edx
+.find_max_mem_area:
+	mov	eax,[ebx]				;base_add_low
+	add	eax,[ebx+8]				;length_low
+	add	ebx,20					;point to the next ARDS
+	cmp	edx,eax
+	jge	.next_ards
+	mov	edx,eax					;edx = the all memory
+.next_ards:
+	loop	.find_max_mem_area
+	jmp	.mem_get_ok
+
+;-----------------------int 0x15 ax=0xe801---------------------
+.e820_failed_so_try_e801:
+	mov	ax,0xe801
+	int	0x15
+	jc	.e801_failed_so_try88
+	
+	;calculate the memory capacity
+	;1.the memory less than 15mb
+	mov	cx,0x400
+	mul	cx
+	shl	edx,16
+	and	eax,0x0000FFFF
+	or 	edx,eax
+	add	edx,0x100000
+	mov	esi,edx
+	;2.the memory more than 16mb
+	xor	eax,eax
+	mov	ax,bx
+	mov	ecx,0x10000
+	mul	ecx
+	add	esi,eax
+	mov	edx,esi					;edx = the all memory
+	jmp	.mem_get_ok
+
+;------------------------int 0x15 ah=0x88-------------------------
+.e801_failed_so_try88:
+	mov	ah,0x88
+	int	0x15
+	jc	.error_hlt
+	and	eax,0x0000FFFF
+	mov	cx,0x400
+	mul	cx
+	shl	edx,16
+	or	edx,eax
+	add	edx,0x100000
+	
+.mem_get_ok:
+	mov	[total_mem_bytes],edx
+	
+	
 	;enter to the pretect mode
 	;1.open the A20 address line
 	;2.load the gdt
@@ -52,6 +116,8 @@ loader_start:
 
 	;over
 	jmp	dword	SELECTOR_CODE:p_mode_start
+.error_hlt:
+	jmp	$
 
 [bits 32]
 p_mode_start:
