@@ -132,3 +132,49 @@ p_mode_start:
 	mov	byte	[gs:160], 'P'
 
 	jmp	$
+
+
+setup_page:
+	mov	ecx,4096				;the size of page directory is 4kb , so set the ecx= 4096
+	mov	esi,0
+	;clear the memory
+.clear_page_dir:
+	mov	[PAGE_DIR_TABLE_POS+esi],0
+	inc	esi
+	loop	.clear_page_dir				
+
+	;create the page directory entry
+.create_pde:	
+	mov	eax,PAGE_DIR_TABLE_POS
+	add 	eax,0x1000
+	mov	ebx,eax					;ebx is the base address of pte
+	or	eax,PG_US_U | PG_RW_W | PG_P		;eax=0x101111 ,this is position and attribute of first page table
+	mov	[PAGE_DIR_TABLE_POS + 0x0],eax
+	mov	[PAGE_DIR_TABLE_POS + 0xc00],eax	;0xc00 is the boundary between user program  and operation system
+	sub	eax,0x1000
+	mov	[PAGE_DIR_TABLE_POS+4096],eax
+	
+	;create the page table entry
+	mov	ecx,256
+	mov	esi,0
+	mov	edx,PG_US_U | PG_RW_W | PG_P		;edx = 0x111, the attribute is 7 , the position is 0 
+.create_pte:
+	mov	[ebx+esi*4],edx
+	add	edx,4096				;4k
+	inc	esi
+	loop	.create_pte
+	
+
+	;create the kernel page directory entry
+	mov	eax,PAGE_DIR_TABLE_POS
+	add	eax,0x2000				;eax is the position of second page table
+	or	eax,PG_US_U | PG_RW_W | PG_P
+	mov	ebx,PAGE_DIR_TABLE_POS
+	mov	ecx,254					;the number of all pde between 769 ~ 1022
+	mov	esi,769
+.create_kernel_pde:
+	mov	[ebx+esi*4],eax
+	inc	esi
+	add	eax,0x1000
+	loop	.create_kernel_pde
+	ret
