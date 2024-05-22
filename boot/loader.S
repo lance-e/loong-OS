@@ -131,15 +131,36 @@ p_mode_start:
 	
 	mov	byte	[gs:160], 'P'
 
-	jmp	$
+	;turn on the page machanism
 
+	call	setup_page
+	
+	sgdt	[gdt_ptr]
+	
+	mov	ebx,[gdt_ptr+2]				;the video descriptor
+	or	dword	[ebx+0x18+4],0xc0000000
+	add	dword 	[gdt_ptr+2],0xc0000000
+	add	esp,0xc0000000
+	
+	mov	eax,PAGE_DIR_TABLE_POS			;set cr3 = the position of page directory 
+	mov	cr3,eax
+	
+	mov	eax,cr0
+	or 	eax,0x80000000				;set the pg position of cr0
+	mov	cr0,eax
+
+	lgdt 	[gdt_ptr]				;reload the new gdt
+
+	mov	byte	[gs:160],'V'
+
+	jmp	$
 
 setup_page:
 	mov	ecx,4096				;the size of page directory is 4kb , so set the ecx= 4096
 	mov	esi,0
 	;clear the memory
 .clear_page_dir:
-	mov	[PAGE_DIR_TABLE_POS+esi],0
+	mov	byte	[PAGE_DIR_TABLE_POS+esi],0
 	inc	esi
 	loop	.clear_page_dir				
 
@@ -152,7 +173,7 @@ setup_page:
 	mov	[PAGE_DIR_TABLE_POS + 0x0],eax
 	mov	[PAGE_DIR_TABLE_POS + 0xc00],eax	;0xc00 is the boundary between user program  and operation system
 	sub	eax,0x1000
-	mov	[PAGE_DIR_TABLE_POS+4096],eax
+	mov	[PAGE_DIR_TABLE_POS+4092],eax
 	
 	;create the page table entry
 	mov	ecx,256
