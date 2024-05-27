@@ -165,6 +165,7 @@ p_mode_start:
 enter_kernel:	
 	call	kernel_init
 	mov	esp,0xc009f000
+	mov	byte	[gs:160], 'K'
 	jmp	KERNEL_ENTRY_POINT
 
 
@@ -256,7 +257,7 @@ kernel_init:
 ;-------------------------mem_cpy(dst,src,size)---------------------------;
 ;			(byte by byte copy)				  ;
 ;-------------------------------------------------------------------------;
-mem_cop:
+mem_cpy:
 	;save the environment
 	cld
 	push	ebp
@@ -265,7 +266,7 @@ mem_cop:
 	
 	mov	edi,[ebp+8]				;dst
 	mov	esi,[ebp+12]				;src
-	mom	ecx,[ebp+16]				;size
+	mov	ecx,[ebp+16]				;size
 	rep	movsb					;byte by byte copy
 	
 	;recovery the environment 
@@ -273,4 +274,60 @@ mem_cop:
 	pop	ebp
 	ret
 			
+rd_disk_m_32:
+	;copy the value
+	mov	esi,eax
+	mov	edi,ecx
+
+	mov	al,cl
+	mov	dx,0x1F2
+	out	dx,al
+	
+	mov	eax,esi				;recover the value of ax
+
+	mov	dx,0x1F3
+	out	dx,al
+	
+	mov	cl,0x8
+	shr	eax,cl
+	mov	dx,0x1F4
+	out	dx,al
+
+	shr	eax,cl
+	mov	dx,0x1F5
+	out	dx,al
+
+	shr	eax,cl
+	and	al,0x0f
+	or 	al,0xe0			;11100000 = 0xe0,
+	mov	dx,0x1F6
+	out	dx,al
+	mov	ax,0x20		
+	mov	dx,0x1F7
+	out	dx,al
+
+   .not_ready:
+	nop
+	in	al,dx
+	and	al,0x88
+	cmp	al,0x08
+	jnz	.not_ready
+
+	;begine to loop read
+	;set the source 
+	mov	ax,di
+	mov	dx,256
+	mul	dx
+	mov	cx,ax
+	mov	dx,0x1F0
+.loop_read_data:
+	in	ax,dx
+	mov	[ebx],ax
+	
+	add	ebx,2
+	loop	.loop_read_data
+	
+	;read over
+	ret
+
 
