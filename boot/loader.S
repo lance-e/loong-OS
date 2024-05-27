@@ -131,8 +131,16 @@ p_mode_start:
 	
 	mov	byte	[gs:160], 'P'
 
-	;turn on the page machanism
+;--------------------------load kernel--------------------------------
 
+	mov	eax,KERNEL_START_SECTOR			;the sector of kernel	
+	mov	ebx,KERNEL_BIN_BASE_ADDR		;the target address of load the kernel
+	mov	ecx,200					;the number of kernel's sector
+	
+	call	rd_disk_m_32
+
+
+;------------------------turn on the page machanism-----------------------------
 	call	setup_page
 	
 	sgdt	[gdt_ptr]
@@ -151,10 +159,17 @@ p_mode_start:
 
 	lgdt 	[gdt_ptr]				;reload the new gdt
 
-	mov	byte	[gs:160],'V'
+;---------------enter kernel--------------------------------
 
-	jmp	$
+	jmp	SELECTOR_CODE:enter_kernel		;refresh assembly line,just in case
+enter_kernel:	
+	call	kernel_init
+	mov	esp,0xc009f000
+	jmp	KERNEL_ENTRY_POINT
 
+
+
+;---------------setup page ----------------------------
 setup_page:
 	mov	ecx,4096				;the size of page directory is 4kb , so set the ecx= 4096
 	mov	esi,0
@@ -199,3 +214,63 @@ setup_page:
 	add	eax,0x1000
 	loop	.create_kernel_pde
 	ret
+
+;--------------------copy the segment of kernel.bin to the address of compile kernel -------------
+
+kernel_init:
+	xor	eax,eax
+	xor	ebx,ebx					;ebx:record the address of program header table(e_phoff)
+	xor	ecx,ecx					;cx:record the number of program header in program header table(e_phnum)
+	xor	edx,edx					;dx:record the size of program header(e_phentsize)
+	
+	mov	dx,[KERNEL_BIN_BASE_ADDR+42]		;42 is the e_phentsize's offset
+	mov	ebx,[KERNEL_BIN_BASE_ADDR+28]		;28 is the e_phoff's offset. Here is mean the first program header
+	add	ebx,KERNEL_BIN_BASE_ADDR
+	mov	cx,[KERNEL_BIN_BASE_ADDR+44]		;44 is the e_phnum's offset
+
+.each_segment:
+	cmp	byte	[ebx+0],PT_NULL			;compare between  p_type and PT_NULL,
+	je	.PTNULL					;if == is that the program header isn't use, so jump
+	
+	;push the params for function memcpy
+
+	;first param:size
+	push	dword	[ebx+16]			;16 is the p_filesz's offset
+
+	;scond param:source address 
+	mov	eax,[ebx+4]				;4 is the p_offset's offset
+	add 	eax,KERNEL_BIN_BASE_ADDR		;add the kernel.bin's load address.
+	push 	eax					;Now the eax is the physic memory of this section,
+
+	;third param;target address
+	push	dword	[ebx+8]				;8 is the p_vaddr's offset
+	
+	call 	mem_cpy
+	add	esp,12					;clear the three params in the stack
+
+.PTNULL:
+	add	ebx,edx					;edx is the size of program header .So here is make the ebx point to the next program header
+	loop	.each_segment
+	ret
+
+;-------------------------mem_cpy(dst,src,size)---------------------------;
+;			(byte by byte copy)				  ;
+;-------------------------------------------------------------------------;
+mem_cop:
+	;save the environment
+	cld
+	push	ebp
+	mov	ebp,esp
+	push	ecx					
+	
+	mov	edi,[ebp+8]				;dst
+	mov	esi,[ebp+12]				;src
+	mom	ecx,[ebp+16]				;size
+	rep	movsb					;byte by byte copy
+	
+	;recovery the environment 
+	pop	ecx
+	pop	ebp
+	ret
+			
+

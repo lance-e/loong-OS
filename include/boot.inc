@@ -57,4 +57,10 @@ PG_RW_W	equ	10b
 PG_US_S	equ	000b
 PG_US_U	equ	100b
 
+;----------------------kernel ------------------------------------
+KERNEL_START_SECTOR	equ	0x9
+KERNEL_BIN_BASE_ADDR	equ	0x70000
 
+
+
+PT_NULL	equ	0x0
