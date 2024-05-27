@@ -100,12 +100,13 @@
 # now supported, but we still recommend to use the BIOS distributed with
 # Bochs. The start address optional, since it can be calculated from image size.
 #=======================================================================
-romimage: file=/home/lance/bochs/bochs-2.6.2/share/bochs/BIOS-bochs-latest 
+romimage: file=/root/loong-OS/share/bochs/BIOS-bochs-latest 
 #romimage: file=bios/seabios-1.6.3.bin
 #romimage: file=mybios.bin, address=0xfff80000 # 512k at memory top
 
 #=======================================================================
-# CPU: # This defines cpu-related parameters inside Bochs:
+# CPU:
+# This defines cpu-related parameters inside Bochs:
 #
 #  MODEL:
 #    Selects CPU configuration to emulate from pre-defined list of all
@@ -378,7 +379,7 @@ memory: guest=512, host=256
 # You now need to load a VGA ROM BIOS into C0000.
 #=======================================================================
 #vgaromimage: file=bios/VGABIOS-elpin-2.40
-vgaromimage: file=/home/lance/bochs/bochs-2.6.2/share/bochs/VGABIOS-lgpl-latest
+vgaromimage: file=/root/loong-OS/share/bochs/VGABIOS-lgpl-latest
 #vgaromimage: file=bios/VGABIOS-lgpl-latest-cirrus
 
 #=======================================================================
@@ -518,7 +519,7 @@ ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
 #   ata3-master: type=disk, mode=flat, path=483M.sample, cylinders=1024, heads=15, spt=63
 #   ata3-slave:  type=cdrom, path=iso.sample, status=inserted
 #=======================================================================
-ata0-master: type=disk, path="/home/lance/GitHub/loong-OS/bin/hd60M.img", mode=flat, cylinders=121, heads=16, spt=63
+ata0-master: type=disk, path="/root/loong-OS/bin/hd60M.img", mode=flat, cylinders=121, heads=16, spt=63
 #ata0-master: type=disk, mode=flat, path="30M.sample"
 #ata0-master: type=disk, mode=flat, path="30M.sample", cylinders=615, heads=6, spt=17
 #ata0-master: type=disk, mode=flat, path="c.img", cylinders=0 # autodetect
@@ -1121,7 +1122,7 @@ pci: enabled=1, chipset=i440fx
 # The default is 32MB, most OS's won't need more than that.
 # The maximum amount of memory supported is 2048Mb.
 # The 'MEGS' option is deprecated. Use 'MEMORY' option instead.
-##=======================================================================
+#=======================================================================
 #megs: 256
 #megs: 128
 #megs: 64
