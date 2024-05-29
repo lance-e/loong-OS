@@ -1,0 +1,14 @@
+nasm -I ./include/ -o ./boot/mbr.bin ./boot/mbr.S
+dd if=./boot/mbr.bin of=./bin/hd60M.img bs=512 count=1 conv=notrunc
+nasm -I ./include/ -o ./boot/loader.bin boot/loader.S
+dd if=./boot/loader.bin of=./bin/hd60M.img bs=512 count=4 seek=2 conv=notrunc
+
+gcc -m32 -c -o kernel/main.o kernel/main.c
+ld -m elf_i386 kernel/main.o -Ttext 0xc0001500 -e main -o kernel.bin
+dd if=./kernel.bin of=./bin/hd60M.img bs=512 count=200 seek=9 conv=notrunc
+
+nasm -f elf -o lib/kernel/print.o lib/kernel/print.S
+gcc -m32 -c -I lib/kernel -o kernel/main.o kernel/main.c
+ld -m elf_i386 -Ttext 0xc0001500 -e main -o kernel.bin kernel/main.o lib/kernel/print.o
+dd if=./kernel.bin of=./bin/hd60M.img bs=512 count=200 seek=9 conv=notrunc
+
