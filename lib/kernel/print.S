@@ -2,11 +2,13 @@ TI_GDT	equ	0
 RPL0	equ	0
 SELECTOR_VIDEO	equ	(0x0003 << 3) + TI_GDT + RPL0
 
+section	.data
+put_int_buffer	dq	0				;8 byte buffer
 [bits 32]
 section	.text
 ;-----------------------------put char---------------------
+global put_char
 
-global	put_char
 put_char:
 	pushad						;copy the register environment; there are 8 register
 	mov	ax,SELECTOR_VIDEO
@@ -30,7 +32,7 @@ put_char:
 	
 ;------------get char-----------------------------------
 	mov	bx,ax					;save the cursor into bx
-	mov	ecx,[esp+36]				;get the char from stack,36 = 4 * 8
+	mov	ecx,[esp+36]				;get the char from stack,36 = 4 * 8,(8 is all register had pushed by 'pushad')
 	
 ;-------------judge control char-----------------------
 	cmp	cl,0xd
@@ -117,4 +119,86 @@ put_char:
 	popad
 	ret
 	
+
+;------------------------put_str----------------------------------
+global	put_str
+put_str:
+	push	ebx
+	push	ecx
+	xor	ecx,ecx
+	mov	ebx,[esp+12]				;get the position of string ,stack had the value of ebx and ecx (8 byte) and the address of function to return (4 byte)	
+		
+.goon:
+	mov	cl,[ebx]
+	cmp	cl,0					;0 is '\0'
+	je	.put_over
+	push	ecx					;push the param of put_char 
+	call	put_char				;
+	add	esp,4
+	inc	ebx
+	jmp	.goon
+
+.put_over:
+	pop	ecx
+	pop	ebx
+	ret
+
+;-------------------------put_int-----------------------------
+global	put_int
+put_int:
+	pushad
+	mov	ebp,esp
+	mov	eax,[ebp+4*9]				;the address of return and value of 8 register
+	mov	edx,eax
+	mov	edi,7					;the offset in buffer
+	mov	ecx,8
+	mov	ebx,put_int_buffer
+	
+.based16_4bits:
+	
+	and	edx,0x0000000F
+	
+	cmp	edx,9
+	jg	.is_A2F					; >
+	add	edx,'0'
+	jmp	.store
+
+.is_A2F:
+	sub	edx,10					;sub 10: is the offset to A
+	add	edx,'A'					;get the ascii
+	
+.store:
+	mov	[ebx+edi],dl				;ebx is the base address of buffer,edi is the offset of buffer,dl is the ascii of char
+	dec	edi
+
+	shr	eax,4					;deal next number
+	mov	edx,eax
+	loop	.based16_4bits
+	
+.ready_to_print:
+	inc	edi
+.skip_prefix_0:
+	cmp	di,8
+	je	.full0
+
+.go_on_skip:
+	mov	cl,[put_int_buffer+edi]
+	inc	edi					;next char
+	cmp	cl,'0'
+	je	.skip_prefix_0
+	dec	edi					;due to the char isn't '0' , so resume the edi that point to the char and print
+	jmp	.put_each_num
+
+.full0:
+	mov	cl,'0'	
+.put_each_num:
+	push	ecx
+	call	put_char
+	add	esp,4					;clear the param stack in put_char
+	inc	edi					;next char
+	mov	cl,[put_int_buffer+edi]
+	cmp	edi,8
+	jl	.put_each_num
+	popad
+	ret
 	

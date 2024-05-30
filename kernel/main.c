@@ -1,42 +1,14 @@
 #include "print.h"
 int main(void){
-	put_char('L');
-	put_char('O');
-	put_char('O');
-	put_char('N');
-	put_char('G');
-	put_char('-');
-	put_char('O');
-	put_char('S');
+	put_str("loong-os\n");
+	put_int(2);
 	put_char('\n');
-	put_char('l');
-	put_char('l');
-	put_char('\b');
-	put_char('a');
-	put_char('n');
-	put_char('c');
-	put_char('e');
+	put_int(0);
 	put_char('\n');
-	put_char('!');
+	put_int(0x00002);
 	put_char('\n');
-	put_char('6');
-	put_char('\n');
-	put_char('6');
-	put_char('\n');
-	put_char('6');
-	put_char('\n');
-	put_char('6');
-	put_char('\n');
-	put_char('6');
-	put_char('\n');
-	put_char('\n');
-	put_char('\n');
-	put_char('\n');
-	put_char('\n');
-	put_char('\n');
-	put_char('\n');
-	put_char('\n');
-
+	put_int(4);
+	put_str("\nyear!");
 	while(1);
 	return 0;
 }
