@@ -7,6 +7,9 @@
 #define RPL2	2
 #define RPL3	3
 
+#define TI_GDT 0
+#define TI_LDT 1
+
 #define	SELECTOR_K_CODE	((1<<3) + (TI_GDT << 2 ) + RPL0)
 #define	SELECTOR_K_DATA ((2<<3)+(TI_GDT << 2 ) + RPL0)
 #define	SELECTOR_k_STACK  SELECTOR_K_DATA
