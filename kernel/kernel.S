@@ -4,11 +4,9 @@
 
 %define	ZERO	push	0				;if the cpu wasn't automic push, so push 0 by ourself
 
-extern	put_str
+extern idt_table					;in c file
 
 section	.data
-intr_str	db	"interrupt occur!",0xa,0
-
 global	intr_entry_table
 intr_entry_table:
 
@@ -17,21 +15,39 @@ section	.text
 intr%1entry:						;%1 is the first param
 
 	%2						;%2 is the second param
-	push	intr_str
-	call	put_str
-	add	esp,4
-	
+	;save the environment
+	push 	ds
+	push 	es
+	push	fs
+	push	gs
+	pushad	
 
 	mov	al,0x20					;interrupt end command:EOI
 	out	0xa0,al
 	out	0x20,al
 
-	add	esp,4
-	iret
+	push	%1					;push the interrupt vector number
+	
+	call	[idt_table+ %1 * 4 ]			;call the interrupt function in c file
+	jmp 	intr_exit
+	
+
+
 section	.data
 	dd	intr%1entry				;in order to make the all element of intr_entry_table is the address of  every handle function
-
 %endmacro
+
+section .text
+global intr_exit
+intr_exit:
+	add	esp,4					;skip the param(interrupt vector number)
+	popad
+	pop	gs
+	pop	fs
+	pop	es
+	pop	ds
+	add	esp,4					;skip the error code
+	iretd
 
 
 VECTOR	0x00,ZERO

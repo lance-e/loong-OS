@@ -28,6 +28,12 @@ static	void make_idt_desc(struct gate_desc* p_gdesc,uint8_t attr,intr_handler fu
 //interrupt descriptor table
 static	struct 	gate_desc	idt[IDT_DESC_CNT];
 
+//save the name 
+char* intr_name[IDT_DESC_CNT];
+
+//save the interrupt function
+intr_handler idt_table[IDT_DESC_CNT];
+
 extern intr_handler intr_entry_table[IDT_DESC_CNT];
 
 static void pic_init(void){
@@ -67,11 +73,54 @@ static	void	idt_desc_init(void){
 	put_str(" idt_desc_init	done\n");
 }
 
+// general  interrupt function 
+static void general_intr_handler(uint8_t vec_nr){
+	//IRQ7 and IRQ15 will make spurious interrupt ,don't need handle
+	//0x2f is the slave chip 's last IRQ ,is reserved items
+	if (vec_nr == 0x27 || vec_nr == 0x2f){
+		return ;
+	}
+	put_str("int vector : 0x");
+	put_int(vec_nr);
+	put_char('\n');
+}	
+
+
+static void exception_init(void){
+	int i ;
+	for (i =  0 ; i < IDT_DESC_CNT; i++){
+		idt_table[i] = general_intr_handler; 			//here set the interrupt function is the default general_intr_handler
+		intr_name[i] = "unknown";
+	}
+	//initial exception name
+	intr_name[0] = "#DE Divide Error";
+	intr_name[1] = "#DB Debug Exception";
+	intr_name[2] = "NMI Interrupt";
+	intr_name[3] = "#BP Breakpoint Exception";
+	intr_name[4] = "#OF overflow Exception";
+	intr_name[5] = "#BR BOUND Range Exceeded Exception";
+	intr_name[6] = "#UD Invalid Opcode Exception";
+	intr_name[7] = "#NM Device Not Availible Exception";
+	intr_name[8] = "#DF Double Fault Exception";
+	intr_name[9] = "Coprocessor Segment Overrun";
+	intr_name[10] = "#TS Invalid TSS Exception ";
+	intr_name[11] = "#NP Segment Not Present";
+	intr_name[12] = "#SS Stack Fault Exception";
+	intr_name[13] = "#GP General Protection Exception";
+	intr_name[14] = "#PF Page-Fault Exception";
+	//intr_name[15] ; 15 is the reserved items,not used
+	intr_name[16] = "#MF x87 FPU Floationg-Point Error";
+	intr_name[17] = "#AC Alignment Check Exception";
+	intr_name[18] = "#MC Machine-Check Exception";
+	intr_name[19] = "#XF SIMD Floating-Point Exception";
+}
 
 void	idt_init(){
 	put_str("idt_init start\n");
 	idt_desc_init();		//initial interrupt descriptor table	
+	exception_init();
 	pic_init();			//initial 8259A
+
 	
 	//load idt
 	uint64_t idt_operand = ((sizeof(idt)-1) | ((uint64_t)(uint32_t)idt << 16 ));
