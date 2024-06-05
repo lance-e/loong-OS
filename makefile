@@ -8,7 +8,8 @@ ASFLAGS = -f elf
 CFLAGS = -m32 -Wall $(LIB) -c -fno-builtin -W -Wstrict-prototypes -Wmissing-prototypes
 LDFLAGS = -m elf_i386 -Ttext $(ENTRY_POINT) -e main 
 OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o $(BUILD_DIR)/timer.o 	\
-	$(BUILD_DIR)/kernel.o $(BUILD_DIR)/print.o $(BUILD_DIR)/debug.o $(BUILD_DIR)/string.o	
+	$(BUILD_DIR)/kernel.o $(BUILD_DIR)/print.o $(BUILD_DIR)/debug.o $(BUILD_DIR)/string.o	\
+	$(BUILD_DIR)/bitmap.o $(BUILD_DIR)/memory.o
 
 ############   compile  C     ###########
 
@@ -35,6 +36,18 @@ $(BUILD_DIR)/debug.o : kernel/debug.c kernel/debug.h 	\
 $(BUILD_DIR)/string.o : lib/string.c lib/string.h 	\
 	lib/stdint.h
 	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD_DIR)/bitmap.o : lib/kernel/bitmap.c lib/kernel/bitmap.h	\
+	kernel/global.h lib/stdint.h lib/string.h lib/kernel/print.h	\
+	kernel/interrupt.h kernel/debug.h
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD_DIR)/memory.o : kernel/memory.c kernel/memory.h	\
+	lib/kernel/print.h lib/stdint.h lib/kernel/bitmap.h
+	$(CC) $(CFLAGS) $< -o $@
+
+
+
 
 ############    compile asm   	     ##############
 
