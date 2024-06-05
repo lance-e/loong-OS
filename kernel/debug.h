@@ -15,10 +15,7 @@ void panic_spin(char* filename,int line , const char* func ,const char* conditio
 #ifdef NDEBUG
 #define ASSERT(CONDITION) ((void)0)
 #else 
-#define ASSERT(CONDITION) \ 
-if (CONDITION){}else {
-	PANIC(#CONDITION);
-}
+#define ASSERT(CONDITION) if (CONDITION){}else {PANIC(#CONDITION);}
 
 #endif   /*NDEBUG*/
 

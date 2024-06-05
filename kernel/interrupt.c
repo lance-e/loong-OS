@@ -2,6 +2,7 @@
 #include	"stdint.h"
 #include	"global.h"
 #include	"io.h"
+#include 	"print.h"
 
 
 #define PIC_M_CTRL 0x20  			//master chip contrl port
@@ -148,7 +149,7 @@ enum intr_status intr_disable(){
 	enum intr_status old_status;
 	if (INTR_ON == intr_get_status()){
 		old_status = INTR_ON;
-		asm volatile ("cli" : " " "memory");
+		asm volatile ("cli" : : : "memory");
 		return old_status;
 	}else {
 		old_status = INTR_OFF;
