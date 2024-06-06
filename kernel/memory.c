@@ -22,7 +22,7 @@
 /* 0xc0000000 is the begin of kernel in virtual address
  * 0x00100000 is mean skip the low 1mb memory , make the virtual address logically continuous*/
 
-#define K_HEAD_START 0xc0100000
+#define K_HEAP_START 0xc0100000
 
 
 #define PDE_IDX(addr) ((addr & 0xffc00000) >> 22)	//get the hight 10 bit
@@ -50,23 +50,24 @@ static void* vaddr_get(enum pool_flags pf,uint32_t pg_cnt){
 		while (cnt < pg_cnt){
 			bitmap_set(&kernel_vaddr.vaddr_bitmap,bit_idx_start+cnt++,1);
 		}
+		vaddr_start = kernel_vaddr.vaddr_start + bit_idx_start * PG_SIZE;
 	}else {
 		// will add in future !!!!!!!!!!!!
 	}
-	return (void*) vaddr_start
+	return (void*) vaddr_start;
 }
 
 
 
 //get the PTE pointer of vaddr;!!!!!
 uint32_t* pte_ptr(uint32_t vaddr){
-       uint32_t* pte = (uint32*) (0xffc00000 + ((vaddr & 0xffc00000) >> 10) +PTE_IDX(vaddr) * 4 );
+       uint32_t* pte = (uint32_t*) (0xffc00000 + ((vaddr & 0xffc00000) >> 10) +PTE_IDX(vaddr) * 4 );
        return pte;
 }
 
 //get the PDE pointer of vaddr;!!!!!
 uint32_t* pde_ptr(uint32_t vaddr){
-	uint32_t* pde = (uint32*)((0xfffff000) + PDE_IDX(vaddr) * 4);
+	uint32_t* pde = (uint32_t*)((0xfffff000) + PDE_IDX(vaddr) * 4);
 	return pde;
 }
 
@@ -109,19 +110,19 @@ static void page_table_add(void* _vaddr, void* _page_phyaddr){
 
 
 //malloc 'pg_cnt' page memory
-/***********************	malloc_page 	******************
- * 	1.vaddr_get : apply for virtual memory in virtual memory pool
- * 	2.palloc: apply for  physic memory in physic memory pool
- * 	3.page_table_add: make the map
+/***********************   malloc_page 	******************
+ * 	1.vaddr_get :		apply for virtual memory in virtual memory pool
+ * 	2.palloc: 		apply for physic memory in physic memory pool
+ * 	3.page_table_add: 	make the map
  ******************************************************************/
 void* malloc_page(enum pool_flags pf,uint32_t pg_cnt){
-	ASSERT(pg_cnt > 0 && pg_cnt < 3840);
+	ASSERT(pg_cnt > 0 && pg_cnt < 3840);		//here set max is 15*1024*1024 /4096 = 3840 page
 	void * vaddr_start = vaddr_get(pf,pg_cnt);
 	if (vaddr_start == NULL ){
 		return NULL;
 	}
 
-	uint32_t vaddr = (uint32)vaddr_start , cnt = pg_cnt;
+	uint32_t vaddr = (uint32_t)vaddr_start , cnt = pg_cnt;
 	struct pool* mem_pool = pf & PF_KERNEL ? &kernel_pool : &user_pool;
 
 	//physic memory isn't continuous
@@ -184,13 +185,13 @@ static void mem_pool_init(uint32_t all_mem){
 	user_pool.pool_bitmap.bits = (void*)(MEM_BITMAP_BASE + kbm_length);		//follow on kernel pool bitmap
 
 	/*******************print the memory pool information*****************/
-	put_str("	kernel_pool_bitmap_start:");
+	put_str("     kernel_pool_bitmap_start:");
 	put_int((int)kernel_pool.pool_bitmap.bits);
 	put_str("  kernel_pool_phy_address_start:");
 	put_int(kernel_pool.phy_addr_start);
 	put_str("\n");
 
-	put_str("	user_pool_bitmap_start:");
+	put_str("     user_pool_bitmap_start:");
 	put_int((int)user_pool.pool_bitmap.bits);
 	put_str("  user_pool_phy_address_start:");
 	put_int(user_pool.phy_addr_start);
@@ -206,8 +207,10 @@ static void mem_pool_init(uint32_t all_mem){
 	kernel_vaddr.vaddr_bitmap.btmp_bytes_len = kbm_length;
 	kernel_vaddr.vaddr_bitmap.bits = (void*)(MEM_BITMAP_BASE + kbm_length + ubm_length);
 
-	kernel_vaddr.vaddr_start = K_HEAD_START;
+
+	kernel_vaddr.vaddr_start = K_HEAP_START;
 	bitmap_init(&kernel_vaddr.vaddr_bitmap);
+
 	
 	put_str("  mem_pool_init done \n");
 

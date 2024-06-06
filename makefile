@@ -14,7 +14,7 @@ OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o $(BUILD_
 ############   compile  C     ###########
 
 $(BUILD_DIR)/main.o : kernel/main.c lib/kernel/print.h	\
-	lib/stdint.h kernel/init.h lib/string.h
+	lib/stdint.h kernel/init.h kernel/memory.h
 	$(CC) $(CFLAGS)  $< -o $@
 
 $(BUILD_DIR)/init.o : kernel/init.c kernel/init.h lib/kernel/print.h \
@@ -43,7 +43,8 @@ $(BUILD_DIR)/bitmap.o : lib/kernel/bitmap.c lib/kernel/bitmap.h	\
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/memory.o : kernel/memory.c kernel/memory.h	\
-	lib/kernel/print.h lib/stdint.h lib/kernel/bitmap.h
+	lib/kernel/print.h lib/stdint.h lib/kernel/bitmap.h	\
+	kernel/global.h lib/string.h kernel/debug.h
 	$(CC) $(CFLAGS) $< -o $@
 
 
