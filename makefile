@@ -9,7 +9,8 @@ CFLAGS = -m32 -Wall $(LIB) -c -fno-builtin -W -Wstrict-prototypes -Wmissing-prot
 LDFLAGS = -m elf_i386 -Ttext $(ENTRY_POINT) -e main 
 OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o $(BUILD_DIR)/timer.o 	\
 	$(BUILD_DIR)/kernel.o $(BUILD_DIR)/print.o $(BUILD_DIR)/debug.o $(BUILD_DIR)/string.o	\
-	$(BUILD_DIR)/bitmap.o $(BUILD_DIR)/memory.o $(BUILD_DIR)/thread.o
+	$(BUILD_DIR)/bitmap.o $(BUILD_DIR)/memory.o $(BUILD_DIR)/thread.o $(BUILD_DIR)/list.o	
+
 
 ############   compile  C     ###########
 
@@ -49,9 +50,13 @@ $(BUILD_DIR)/memory.o : kernel/memory.c kernel/memory.h	\
 
 $(BUILD_DIR)/thread.o : thread/thread.c thread/thread.h 	\
 	lib/stdint.h lib/string.h kernel/global.h 	\
-	kernel/memory.h
+	kernel/memory.h lib/kernel/list.h kernel/interrupt.h	\
+	kernel/debug.h
 	$(CC) $(CFLAGS) $< -o $@
 
+$(BUILD_DIR)/list.o : lib/kernel/list.c lib/kernel/list.h	\
+	kernel/global.h kernel/interrupt.h 
+	$(CC) $(CFLAGS) $< -o $@
 
 
 

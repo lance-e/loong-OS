@@ -1,6 +1,7 @@
 #ifndef __THREAD_THREAD_H
 #define __THREAD_THREAD_H
 #include "stdint.h"
+#include "list.h"
 
 
 typedef void thread_func(void*);
@@ -66,16 +67,27 @@ struct thread_stack{
 };
 
 
-//the PCB of process or thread
+//the PCB 
 struct task_struct {
 	uint32_t self_kstack;
 	enum task_status status;
-	uint8_t priority;
 	char name[16];
-	uint32_t stack_magic;
+	uint8_t priority;
+	uint8_t ticks;				//the time ticks of run in cpu
+
+	uint32_t elapsed_ticks;			//record the all ticks after run in cpu
+
+	struct list_elem general_tag;		//the node of general list
+
+	struct list_elem all_list_tag;		//the node of thread list
+	
+	uint32_t* pgdir;				//the virtual address of process's page table,!:thread:NULL(thread don't have page table)
+
+	uint32_t stack_magic;			//edge of stack
 };
 
 
+struct task_struct* running_thread(void);
 void thread_create(struct task_struct* pthread,thread_func function , void* func_arg);
 void init_thread(struct task_struct* pthread,char* name,int prio);
 struct task_struct* thread_start(char* name, int prio, thread_func function , void* func_arg);
