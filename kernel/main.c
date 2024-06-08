@@ -1,19 +1,21 @@
 #include "print.h"
+#include "thread.h"
 #include "init.h"
-#include "memory.h"
+
+void k_thread_a(void*);
+
 int main(void){
-	put_str("Kernel Starting!\n");
+	put_str("kernel starting!");
 	init_all();
-
-	void* addr = get_kernel_pages(3);
-	put_str("\n  I get kernel pages is :");
-	put_int((uint32_t)addr);
-	put_str("\n");
-	void* addr_two = get_kernel_pages(2);
-	put_str("\n  I get kernel pages is :");
-	put_int((uint32_t)addr_two);
-	put_str("\n");
-
+	thread_start("k_thread_a",31,k_thread_a,"argA ");
+	
 	while(1);
 	return 0;
+}
+
+void k_thread_a(void* arg){
+	char* param= arg;
+	while(1){
+		put_str(param);
+	}
 }
