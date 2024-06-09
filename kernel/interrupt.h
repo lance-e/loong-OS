@@ -1,6 +1,8 @@
 #ifndef __KERNEL_INTERRUPT_H
 #define __KERNEL_INTERRUPT_H
+#include "stdint.h"
 typedef void* intr_handler;
+void register_handler(uint8_t vector_no,intr_handler function);
 void idt_init(void);
 
 

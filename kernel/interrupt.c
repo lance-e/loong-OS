@@ -83,9 +83,27 @@ static void general_intr_handler(uint8_t vec_nr){
 	if (vec_nr == 0x27 || vec_nr == 0x2f){
 		return ;
 	}
-	put_str("int vector : 0x");
-	put_int(vec_nr);
-	put_char('\n');
+	
+	//print a block of blank
+	set_cursor(0);
+
+	int cursor_pos =  0 ;
+	while (cursor_pos++ < 320){
+		put_char(' ');
+	}
+
+	set_cursor(0);
+	put_str("!!!!!!!!          excetion message begin         !!!!!!!!\n");
+	set_cursor(88);
+	put_str(intr_name[vec_nr]);
+	if (vec_nr == 14){
+		// PageFault
+		int page_fault_vaddr = 0 ;
+		asm ("movl %%cr2 , %0" : "=r" (page_fault_vaddr));
+		put_str("\npage fault address is ");put_int(page_fault_vaddr);
+	}
+	put_str("\n!!!!!!!!         exccetion message end            !!!!!!!\n");
+	while(1);
 }	
 
 
@@ -116,6 +134,11 @@ static void exception_init(void){
 	intr_name[17] = "#AC Alignment Check Exception";
 	intr_name[18] = "#MC Machine-Check Exception";
 	intr_name[19] = "#XF SIMD Floating-Point Exception";
+}
+
+//register interrupt function in the 'vector_no' of interrupt function array
+void register_handler(uint8_t vector_no,intr_handler function){
+	idt_table[vector_no]  = function;
 }
 
 void	idt_init(){

@@ -27,7 +27,7 @@ void list_push(struct list* plist , struct list_elem* elem){
 
 //append to the tail
 void list_append(struct list* plist,struct list_elem* elem){
-	list_insert_before(plist->tail.prev,elem);
+	list_insert_before(&plist->tail,elem);
 }
 
 //remove the target element
