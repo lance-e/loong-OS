@@ -17,8 +17,6 @@ int main(void){
 
 	//set_cursor(0);
 	//put_str("fuck you!");
-
-
 	while(1){
 		put_str("Main ");
 	};
