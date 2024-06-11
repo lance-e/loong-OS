@@ -6,7 +6,7 @@
 #include "thread.h"
 #include "stdint.h"
 
-#define IRQ0_FREQUENCY 100000
+#define IRQ0_FREQUENCY 30000
 #define INPUT_FREQUENCY 1193180
 #define COUNTER0_VALUE INPUT_FREQUENCY / IRQ0_FREQUENCY				//the initial value of counter 0 
 #define COUNTER0_PORT 0x40

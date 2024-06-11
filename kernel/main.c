@@ -14,11 +14,10 @@ int main(void){
 	thread_start("k_thread_b",8,k_thread_b,"argB ");
 
 	intr_enable();
-
-	//set_cursor(0);
-	//put_str("fuck you!");
 	while(1){
+		intr_disable();
 		put_str("Main ");
+		intr_enable();
 	};
 	return 0;
 }
@@ -26,12 +25,16 @@ int main(void){
 void k_thread_a(void* arg){
 	char* param= arg;
 	while(1){
+		intr_disable();
 		put_str(param);
+		intr_enable();
 	}
 }
 void k_thread_b(void* arg){
 	char* param = arg;
 	while(1){
+		intr_disable();
 		put_str(param);
+		intr_enable();
 	}
 }

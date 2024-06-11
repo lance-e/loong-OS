@@ -100,7 +100,6 @@ put_char:
 	loop	.cls
 	mov	bx,1920					;make the cursor at the head of last line
 
-global set_cursor
 .set_cursor:
 	;set high 8 bit
 	mov	dx,0x03d4

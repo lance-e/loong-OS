@@ -18,6 +18,7 @@
 #define GET_EFLAGS(EFLAGS_VAR) asm volatile("pushfl; popl %0" : "=g" (EFLAGS_VAR))
 
 
+
 // struct of interrupt gate describtor
 struct 	gate_desc{
 	uint16_t	func_offset_low_word;
@@ -156,27 +157,21 @@ void	idt_init(){
 
 //enable interrupt and return the status before open
 enum intr_status intr_enable(){
-	enum intr_status old_status;
 	if (INTR_ON == intr_get_status()){
-		old_status = INTR_ON;
-		return old_status;
+		return INTR_ON;
 	}else {
-		old_status = INTR_OFF;
 		asm volatile ("sti");
-		return old_status;
+		return INTR_OFF;
 	}
 }
 
 //disable interrupt and return the status before close
 enum intr_status intr_disable(){
-	enum intr_status old_status;
 	if (INTR_ON == intr_get_status()){
-		old_status = INTR_ON;
 		asm volatile ("cli" : : : "memory");
-		return old_status;
+		return INTR_ON;
 	}else {
-		old_status = INTR_OFF;
-		return old_status;
+		return INTR_OFF;
 	}
 }
 
