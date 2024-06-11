@@ -36,8 +36,8 @@ void sema_down(struct semaphore* psema){
 
 //semaphore up(+1) :V
 void sema_up(struct semaphore* psema){
-	enum intr_status old_status = intr_enable();
-	ASSERT(psema->value = 0 );
+	enum intr_status old_status = intr_disable();
+	ASSERT(psema->value == 0 );
 	if (!list_empty(&psema->waiters)){
 		struct task_struct* thread_blocked = (struct task_struct*)((uint32_t)list_pop(&psema->waiters) & 0xfffff000);
 		thread_unblock(thread_blocked);

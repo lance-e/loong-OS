@@ -10,7 +10,7 @@ void panic_spin(char* filename, 	\
 		const char* condition){
 	//close interrupt 
 	intr_disable();
-	put_str("\n\n\n!!!!! errorr !!!!!\n");
+	put_str("\n\n\n!!!!! error !!!!!\n");
 	put_str("filename:");put_str(filename);put_str("\n");
 	put_str("line:0x");put_int(line);put_str("\n");
 	put_str("function:");put_str((char*)func);put_str("\n");
