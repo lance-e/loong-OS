@@ -53,13 +53,9 @@ static void pic_init(void){
 	outb(PIC_S_DATA , 0x02);			//ICW3
 	outb(PIC_S_DATA , 0x01);			//ICW4
 
-	//clock interrupt:
-	//open the IR0 in the main chip , mean that just accept the  clock interrupt
-	//outb(PIC_M_DATA , 0xfe);
-	//outb(PIC_S_DATA , 0xff);
-	
-	//keyboard interrupt:
-	outb(PIC_M_DATA,0xfd);
+	//clock interrupt and keyboard interrupt:
+	// 0xfc :low 2 bit is 0 
+	outb(PIC_M_DATA,0xfc);
 	outb(PIC_S_DATA,0xff);
 
 	put_str(" pic_init done\n");

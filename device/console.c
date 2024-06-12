@@ -29,6 +29,14 @@ void console_put_str(char* str){
 	console_release();
 }
 
+//print char in console
+void console_put_char(uint8_t char_ascii){
+	console_acquire();
+	put_char(char_ascii);
+	console_release();
+}
+
+
 //print 16bit int in console
 void console_put_int(uint32_t num){
 	console_acquire();
