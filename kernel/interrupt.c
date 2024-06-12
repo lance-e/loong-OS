@@ -12,7 +12,7 @@
 
 
 //the number of interrupt
-#define	IDT_DESC_CNT	0x21				
+#define	IDT_DESC_CNT	0x30				
 
 #define EFLAGS_IF 0x00000200
 #define GET_EFLAGS(EFLAGS_VAR) asm volatile("pushfl; popl %0" : "=g" (EFLAGS_VAR))
@@ -53,9 +53,14 @@ static void pic_init(void){
 	outb(PIC_S_DATA , 0x02);			//ICW3
 	outb(PIC_S_DATA , 0x01);			//ICW4
 
+	//clock interrupt:
 	//open the IR0 in the main chip , mean that just accept the  clock interrupt
-	outb(PIC_M_DATA , 0xfe);
-	outb(PIC_S_DATA , 0xff);
+	//outb(PIC_M_DATA , 0xfe);
+	//outb(PIC_S_DATA , 0xff);
+	
+	//keyboard interrupt:
+	outb(PIC_M_DATA,0xfd);
+	outb(PIC_S_DATA,0xff);
 
 	put_str(" pic_init done\n");
 }

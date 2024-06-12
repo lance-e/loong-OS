@@ -19,7 +19,7 @@
 00000000000i[     ]   SB16 support: no
 00000000000i[     ]   USB support: no
 00000000000i[     ]   VGA extension support: vbe
-00000000000i[MEM0 ] allocated memory at 0x7a18ce3dd010. after alignment, vector=0x7a18ce3de000
+00000000000i[MEM0 ] allocated memory at 0x74d41bfdd010. after alignment, vector=0x74d41bfde000
 00000000000i[MEM0 ] 32.00MB
 00000000000i[MEM0 ] mem block size = 0x00100000, blocks=32
 00000000000i[MEM0 ] rom at 0xfffe0000/131072 ('/root/loong-OS/share/bochs/BIOS-bochs-latest')
@@ -29,7 +29,7 @@
 00000000000i[DEV  ] PIIX3 PCI-to-ISA bridge present at device 1, function 0
 00000000000i[     ] init_dev of 'cmos' plugin device by virtual method
 00000000000i[CMOS ] Using local time for initial clock
-00000000000i[CMOS ] Setting initial clock to: Tue Jun 11 16:43:25 2024 (time0=1718095405)
+00000000000i[CMOS ] Setting initial clock to: Wed Jun 12 13:15:20 2024 (time0=1718169320)
 00000000000i[     ] init_dev of 'dma' plugin device by virtual method
 00000000000i[DMA  ] channel 4 used by cascade
 00000000000i[     ] init_dev of 'pic' plugin device by virtual method
@@ -207,29 +207,27 @@
 00010000004i[XGUI ] charmap update. Font Height is 16
 00156566078i[BIOS ] Booting from 0000:7c00
 00156780160i[MEM0 ] allocate_block: block=0x1 used 0x3 of 0x20
-00156858831i[MEM0 ] allocate_block: block=0x2 used 0x4 of 0x20
-04336162850i[     ] Ctrl-C detected in signal handler.
-04336162851i[XGUI ] Mouse capture off
-04336162851i[     ] Ctrl-C detected in signal handler.
-04336162851i[     ] dbg: Quit
-04336162851i[CPU0 ] CPU is in protected mode (active)
-04336162851i[CPU0 ] CS.mode = 32 bit
-04336162851i[CPU0 ] SS.mode = 32 bit
-04336162851i[CPU0 ] EFER   = 0x00000000
-04336162851i[CPU0 ] | EAX=00000000  EBX=000700d4  ECX=c0101f94  EDX=c0005bd0
-04336162851i[CPU0 ] | ESP=c009ef44  EBP=c009ef48  ESI=00070000  EDI=00000000
-04336162851i[CPU0 ] | IOPL=0 id vip vif ac vm rf nt of df if tf sf ZF af PF cf
-04336162851i[CPU0 ] | SEG sltr(index|ti|rpl)     base    limit G D
-04336162851i[CPU0 ] |  CS:0008( 0001| 0|  0) 00000000 ffffffff 1 1
-04336162851i[CPU0 ] |  DS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-04336162851i[CPU0 ] |  SS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-04336162851i[CPU0 ] |  ES:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-04336162851i[CPU0 ] |  FS:0000( 0000| 0|  0) 00000000 00000000 0 0
-04336162851i[CPU0 ] |  GS:0018( 0003| 0|  0) c00b8000 00007fff 1 1
-04336162851i[CPU0 ] | EIP=c0001a2c (c0001a2c)
-04336162851i[CPU0 ] | CR0=0xe0000011 CR2=0x00000000
-04336162851i[CPU0 ] | CR3=0x00100000 CR4=0x00000000
-04336162851d[PCI  ] Exit
-04336162851i[CMOS ] Last time is 1718095491 (Tue Jun 11 16:44:51 2024)
-04336162851i[XGUI ] Exit
-04336162851i[CTRL ] quit_sim called with exit code 0
+03231518242i[     ] Ctrl-C detected in signal handler.
+03231518243i[XGUI ] Mouse capture off
+03231518243i[     ] dbg: Quit
+03231518243i[CPU0 ] CPU is in protected mode (active)
+03231518243i[CPU0 ] CS.mode = 32 bit
+03231518243i[CPU0 ] SS.mode = 32 bit
+03231518243i[CPU0 ] EFER   = 0x00000000
+03231518243i[CPU0 ] | EAX=00000000  EBX=000700d4  ECX=00000003  EDX=00000021
+03231518243i[CPU0 ] | ESP=c009efe0  EBP=c009effc  ESI=00070000  EDI=00000000
+03231518243i[CPU0 ] | IOPL=0 id vip vif ac vm rf nt of df IF tf SF zf AF PF CF
+03231518243i[CPU0 ] | SEG sltr(index|ti|rpl)     base    limit G D
+03231518243i[CPU0 ] |  CS:0008( 0001| 0|  0) 00000000 ffffffff 1 1
+03231518243i[CPU0 ] |  DS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+03231518243i[CPU0 ] |  SS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+03231518243i[CPU0 ] |  ES:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+03231518243i[CPU0 ] |  FS:0000( 0000| 0|  0) 00000000 00000000 0 0
+03231518243i[CPU0 ] |  GS:0018( 0003| 0|  0) c00b8000 00007fff 1 1
+03231518243i[CPU0 ] | EIP=c0001532 (c0001532)
+03231518243i[CPU0 ] | CR0=0xe0000011 CR2=0x00000000
+03231518243i[CPU0 ] | CR3=0x00100000 CR4=0x00000000
+03231518243d[PCI  ] Exit
+03231518243i[CMOS ] Last time is 1718169384 (Wed Jun 12 13:16:24 2024)
+03231518243i[XGUI ] Exit
+03231518243i[CTRL ] quit_sim called with exit code 0
