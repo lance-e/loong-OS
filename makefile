@@ -11,7 +11,7 @@ OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o $(BUILD_
 	$(BUILD_DIR)/kernel.o $(BUILD_DIR)/print.o $(BUILD_DIR)/debug.o $(BUILD_DIR)/string.o	\
 	$(BUILD_DIR)/bitmap.o $(BUILD_DIR)/memory.o $(BUILD_DIR)/thread.o $(BUILD_DIR)/list.o	\
 	$(BUILD_DIR)/switch.o $(BUILD_DIR)/sync.o $(BUILD_DIR)/console.o $(BUILD_DIR)/keyboard.o \
-	$(BUILD_DIR)/ioqueue.o									
+	$(BUILD_DIR)/ioqueue.o $(BUILD_DIR)/tss.o	
 
 
 ############   compile  C     ###########
@@ -80,6 +80,11 @@ $(BUILD_DIR)/keyboard.o : device/keyboard.c device/keyboard.h	\
 $(BUILD_DIR)/ioqueue.o : device/ioqueue.c device/ioqueue.h	\
 	kernel/interrupt.h kernel/global.h kernel/debug.h	\
 	thread/thread.h thread/sync.h
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD_DIR)/tss.o : userprog/tss.c userprog/tss.h		\
+	thread/thread.h kernel/global.h lib/stdint.h lib/kernel/print.h	\
+	lib/string.h	
 	$(CC) $(CFLAGS) $< -o $@
 
 

@@ -16,4 +16,5 @@ void init_all(){
 	timer_init();
 	console_init();
 	keyboard_init();
+	tss_init();
 }
