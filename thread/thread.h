@@ -2,6 +2,7 @@
 #define __THREAD_THREAD_H
 #include "stdint.h"
 #include "list.h"
+#include "memory.h"
 
 
 typedef void thread_func(void*);
@@ -81,7 +82,9 @@ struct task_struct {
 
 	struct list_elem all_list_tag;		//the node of thread list
 	
-	uint32_t* pgdir;				//the virtual address of process's page table,!:thread:NULL(thread don't have page table)
+	uint32_t* pgdir;			//the virtual address of process's page table,!:thread:NULL(thread don't have page table)
+
+	struct virtual_addr userprog_vaddr;	// virtual address pool of user process 
 
 	uint32_t stack_magic;			//edge of stack
 };

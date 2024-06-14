@@ -7,14 +7,13 @@
 #include "debug.h"
 #include "print.h"
 #include "list.h"
+#include "process.h"
 
 #define PG_SIZE 4096
 
 struct task_struct* main_thread;			//main thread PCB
 struct list thread_ready_list;				//ready queue
 struct list thread_all_list;				//all thread queue node
-//static struct list_elem* thread_tag;			//save the thread node in queue
-
 
 
 extern void switch_to(struct task_struct* cur,struct task_struct* next);
@@ -129,6 +128,10 @@ void schedule(){
 	struct task_struct* next = (struct task_struct*)((uint32_t)thread_tag & 0xfffff000);
 
 	next->status = TASK_RUNNING;
+
+	//activate task's page table and tss (process, not thread)
+	process_activate(next);
+
 	switch_to(cur,next);
 
 }

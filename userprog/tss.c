@@ -81,12 +81,12 @@ void tss_init(){
 	//add code descritor and data descritor (dpl = 3 )
 	*((struct gdt_desc * )0xc0000928 ) = make_gdt_desc(	\
 		(uint32_t*)0,		\
-		0xffff,			\
+		0xfffff,			\
 		GDT_CODE_ATTR_LOW_DPL3, \
 		GDT_ATTR_HIGH);
 	*((struct gdt_desc * )0xc0000930 ) = make_gdt_desc(	\
 		(uint32_t*)0,		\
-		0xffff,			\
+		0xfffff,			\
 		GDT_DATA_ATTR_LOW_DPL3, \
 		GDT_ATTR_HIGH);
 

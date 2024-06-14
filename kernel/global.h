@@ -4,6 +4,7 @@
 
 //---------------------------macro in c progam --------------------------
 #define NULL ((void*)0)
+#define DIV_ROUND_UP(X,STEP) ((X + STEP -1 ) / (STEP))
 #define bool int
 #define true 1 
 #define false 0 
@@ -22,8 +23,8 @@
 #define	SELECTOR_K_DATA ((2<<3)+(TI_GDT << 2 ) + RPL0)
 #define	SELECTOR_K_STACK  SELECTOR_K_DATA
 #define SELECTOR_K_GS ((3<<3) + (TI_GDT << 2) + RPL0)
-#define SELECTOR_U_CODE ((4<<3) + (TI_GDT << 2) + RPL3)
-#define SELECTOR_U_DATA ((5<<3) + (TI_GDT << 2) + RPL3)
+#define SELECTOR_U_CODE ((5<<3) + (TI_GDT << 2) + RPL3)
+#define SELECTOR_U_DATA ((6<<3) + (TI_GDT << 2) + RPL3)
 #define SELECTOR_U_STACK SELECTOR_U_DATA
 
 
@@ -89,5 +90,16 @@ struct gdt_desc{
 	uint8_t limit_high_attr_high;
 	uint8_t base_high_byte;
 };
+
+
+//------------------------------ the attribute of eflags -------------------
+
+#define EFLAGS_MBS (1<<1)
+#define EFLAGS_IF_1 (1<<9)
+#define EFLAGS_IF_0 0
+#define EFLAGS_IOPL_3 (3<<12)
+#define EFLAGS_IOPL_0 (0<<12)
+
+
 
 #endif
