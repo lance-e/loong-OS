@@ -99,3 +99,36 @@ VECTOR  0x2d,ZERO
 VECTOR  0x2e,ZERO
 VECTOR  0x2f,ZERO
 
+
+
+;;;;;;;;;;;;;;;;;;;; 0x80 interrupt ;;;;;;;;;;;;;;;;;;;;;;
+[bits 32]
+extern syscall_table
+section .text
+global syscall_handler
+syscall_handler:
+	;1.save the context
+	push 	0 
+
+	push	ds
+	push	es
+	push	fs	
+	push	gs
+	pushad
+	
+
+	push	0x80
+
+	;2.push params 
+	push	edx					;3th arg
+	push	ecx					;2nd arg
+	push	ebx					;1st arg
+
+	;3. call the handler
+	call 	[sycall_table + ebx * 4]
+	add 	esp,12					;jmp the three argument
+	
+	;4. get the return value
+	mov	[esp + 8*4],eax
+	jmp	intr_exita				; recover the context
+	

@@ -5,6 +5,7 @@
 #include "memory.h"
 
 
+typedef int16_t pid_t;
 typedef void thread_func(void*);
 
 
@@ -71,6 +72,7 @@ struct thread_stack{
 //the PCB 
 struct task_struct {
 	uint32_t self_kstack;
+	pid_t pid;
 	enum task_status status;
 	char name[16];
 	uint8_t priority;
