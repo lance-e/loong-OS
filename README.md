@@ -1,4 +1,4 @@
-![logo](./image/logo.png)
+![logo](https://github.com/lance-e/loong-OS/image/logo.png)
 
 > 参考《操作系统真象还原》和Linux早期源码 ，从零到一实现一个类Unix小型操作系统。
 
