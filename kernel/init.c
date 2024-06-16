@@ -6,6 +6,7 @@
 #include "thread.h"
 #include "console.h"
 #include "keyboard.h"
+#include "syscall-init.h"
 
 //initial all module
 void init_all(){
@@ -17,4 +18,5 @@ void init_all(){
 	console_init();
 	keyboard_init();
 	tss_init();
+	syscall_init();
 }

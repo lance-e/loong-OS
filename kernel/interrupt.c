@@ -107,7 +107,7 @@ static void general_intr_handler(uint8_t vec_nr){
 		// PageFault
 		int page_fault_vaddr = 0 ;
 		asm ("movl %%cr2 , %0" : "=r" (page_fault_vaddr));
-		put_str("\npage fault address is ");put_int(page_fault_vaddr);
+		put_str("\n        page fault address is ");put_int(page_fault_vaddr);
 	}
 	put_str("\n!!!!!!!!         exccetion message end            !!!!!!!\n");
 	while(1);
