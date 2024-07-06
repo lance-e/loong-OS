@@ -54,11 +54,16 @@ void k_thread_b(void* arg){
 	while(1);
 }
 void u_proc_a(void){
-	printf(" prog_a_pid : 0x%x\n",getpid());
+	char* name = "prog_a";
+	printf(" I am %s , my pid : %d%c", name ,getpid(),'\n');
 	while(1);
 }
 
 void u_proc_b(void){
-	printf(" prog_b_pid : 0x%x\n",getpid());
+	char * name = "prog_b" ;
+	char buf[100] = {0};
+	printf(" I am %s , my pid : %d%c", name ,getpid(),'\n');
+	sprintf(buf, " test sprintf!!!!%c",'\n');
+	write(buf);
 	while(1);
 }
