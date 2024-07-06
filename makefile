@@ -12,7 +12,7 @@ OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o $(BUILD_
 	$(BUILD_DIR)/bitmap.o $(BUILD_DIR)/memory.o $(BUILD_DIR)/thread.o $(BUILD_DIR)/list.o	\
 	$(BUILD_DIR)/switch.o $(BUILD_DIR)/sync.o $(BUILD_DIR)/console.o $(BUILD_DIR)/keyboard.o \
 	$(BUILD_DIR)/ioqueue.o $(BUILD_DIR)/tss.o $(BUILD_DIR)/process.o $(BUILD_DIR)/syscall.o	\
-	$(BUILD_DIR)/syscall-init.o
+	$(BUILD_DIR)/syscall-init.o $(BUILD_DIR)/stdio.o
 
 
 ############   compile  C     ###########
@@ -102,7 +102,11 @@ $(BUILD_DIR)/syscall.o : lib/user/syscall.c lib/user/syscall.h 	\
 
 $(BUILD_DIR)/syscall-init.o : userprog/syscall-init.c		\
 	userprog/syscall-init.h thread/thread.h lib/kernel/print.h	\
-	lib/stdint.h lib/user/syscall.h
+	lib/stdint.h lib/user/syscall.h device/console.h lib/string.h
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD_DIR)/stdio.o : lib/stdio.c lib/stdio.h  lib/user/syscall.h	\
+	lib/stdint.h lib/string.h kernel/global.h
 	$(CC) $(CFLAGS) $< -o $@
 
 

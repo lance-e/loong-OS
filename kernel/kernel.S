@@ -74,7 +74,7 @@ syscall_handler:
 	push	ebx					;1st arg
 
 	;3. call the handler
-	call 	[syscall_table + ebx * 4]
+	call 	[syscall_table + eax * 4]
 	add 	esp,12					;jmp the three argument
 	
 	;4. get the return value
