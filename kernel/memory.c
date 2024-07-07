@@ -6,6 +6,8 @@
 #include "string.h"
 #include "debug.h"
 #include "sync.h"
+#include "thread.h"
+#include "interrupt.h"
 
 #define PG_SIZE 4096
 
@@ -30,6 +32,9 @@
 #define PTE_IDX(addr) ((addr & 0x003ff000) >> 12)	//get the middle 10 bit
 
 
+
+
+//memory pool
 struct pool{
 	struct bitmap pool_bitmap;			//to manage the physic memory
 	uint32_t phy_addr_start;			//the start of physic memory to manage
@@ -39,6 +44,21 @@ struct pool{
 };
 struct pool kernel_pool,user_pool;
 struct virtual_addr kernel_vaddr;
+
+
+//memory repository
+struct arena {
+	struct mem_block_desc* desc;
+	
+	// if large =true , cnt is the number of page 
+	// if large =false, cnt is the number of memory block
+	uint32_t cnt;					
+
+	bool large;
+};
+struct mem_block_desc k_block_descs[DESC_CNT];
+
+
 
 //apply for 'pg_cnt' virtual page in the 'pf' virtual memory pool
 //success :return the begin of address , failed: return NULL
@@ -282,10 +302,136 @@ static void mem_pool_init(uint32_t all_mem){
 }
 
 
+//prepare for malloc :initial the memory block descriptor  
+void block_desc_init(struct mem_block_desc* desc_array){
+	uint16_t index ,size = 16;
+	for (index = 0 ; index < DESC_CNT ; index ++ ){
+		desc_array[index].block_size = size;
+
+		//initial the number of memory block in arena
+		desc_array[index].block_per_arena = (PG_SIZE - sizeof(struct arena)) / size;
+
+		list_init(&desc_array[index].free_list);
+
+		size *= 2;
+	}
+}
+
+//return the address of 'index' in the arena
+static struct mem_block* arena2block(struct arena* a , uint32_t index){
+	return (struct mem_block*)((uint32_t)a + sizeof(struct arena) + index * a->desc->block_size);
+}
+
+//return the address of which arena 'b' at
+static struct arena* block2arena(struct mem_block* b){
+	return (struct arena*)((uint32_t)b & 0xfffff000);
+}
+
+//malloc 'size' memory from heap
+void* sys_malloc(uint32_t size){
+	enum pool_flags PF;
+	struct pool* mem_pool;
+	uint32_t pool_size;
+	struct mem_block_desc* descs;
+	struct task_struct* cur_thread = running_thread();
+
+	//judge use which memory pool
+	if (cur_thread->pgdir == NULL ){				//kernel memory pool
+		PF = PF_KERNEL;
+		pool_size = kernel_pool.pool_size;
+		mem_pool = &kernel_pool;
+		descs = k_block_descs;
+	}else {								//user process memory pool
+		PF = PF_USER;
+		pool_size = user_pool.pool_size;
+		mem_pool = &user_pool;
+		descs = cur_thread->u_block_desc; 
+	}
+
+	//judge if there is enough capacity
+	if (!(size > 0 && size < pool_size)){
+		return NULL;
+	}
+	struct arena* a;
+	struct mem_block* b;
+	lock_acquire(&mem_pool->lock);
+	
+	//begin malloc
+	if (size > 1024){
+		uint32_t page_cnt = DIV_ROUND_UP(size + sizeof(struct arena) , PG_SIZE);
+
+		a = malloc_page(PF,page_cnt);
+
+		if (a != NULL){
+			memset(a, 0 , page_cnt * PG_SIZE);		//clear the malloc memory
+			a->desc = NULL;
+			a->cnt = page_cnt;
+			a->large = true;
+			lock_release(&mem_pool->lock);
+			//+1 is mean skip a size of struct arena(meta message)
+			return (void*)(a + 1);				
+		}else {
+			lock_release(&mem_pool->lock);
+			return NULL;
+		}
+
+	}else {								
+
+		//get the kind of block index
+		uint8_t index;
+		for (index = 0 ; index < DESC_CNT;  index++){
+			if (size <= descs[index].block_size){
+				break;
+			}
+		}
+		
+		// if the 'free_list' already have no available 'mem_block', now create new arena
+		if (list_empty(&descs[index].free_list)){
+			a = malloc_page(PF , 1);
+			if (a == NULL){
+				lock_release(&mem_pool->lock);
+				return NULL;
+			}
+			memset(a , 0 , PG_SIZE);
+
+			a->desc = &descs[index];
+			a->large = false;
+			a->cnt = descs[index].block_per_arena;
+			
+			uint32_t block_index;
+
+			enum intr_status old_status = intr_disable();
+
+			//begin to split the memory of arena
+			//and add to the 'free_list' of memory block descriptor
+			for (block_index = 0 ;block_index < descs[index].block_per_arena;block_index ++){
+				b = arena2block(a, block_index);
+				ASSERT(!elem_find(&a->desc->free_list , &b->free_elem));
+				list_append( &a->desc->free_list , &b->free_elem);
+			}
+			intr_set_status(old_status);
+		}
+		
+		//begin to malloc memory block
+		b = (struct mem_block*)(list_pop(&(descs[index].free_list)) );
+		memset(b , 0 , descs[index].block_size);
+
+		a = block2arena(b);
+		a->cnt --;
+		lock_release(&mem_pool->lock);
+		return (void*)b;
+	}
+
+}
+
+		
+
+
 void mem_init(){
 	put_str("mem_init start\n");
 	uint32_t mem_bytes_total = (* (uint32_t*)(0xb00));				//set at loader.S 
 	mem_pool_init(mem_bytes_total);
+	block_desc_init(k_block_descs);
 	put_str("mem_init done\n");
 }
 

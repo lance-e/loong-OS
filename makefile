@@ -53,7 +53,8 @@ $(BUILD_DIR)/bitmap.o : lib/kernel/bitmap.c lib/kernel/bitmap.h	\
 
 $(BUILD_DIR)/memory.o : kernel/memory.c kernel/memory.h	\
 	lib/kernel/print.h lib/stdint.h lib/kernel/bitmap.h	\
-	kernel/global.h lib/string.h kernel/debug.h thread/sync.h	
+	kernel/global.h lib/string.h kernel/debug.h thread/sync.h	\
+	thread/thread.h	 kernel/interrupt.h lib/kernel/list.h
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/thread.o : thread/thread.c thread/thread.h 	\

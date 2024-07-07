@@ -87,6 +87,8 @@ struct task_struct {
 	uint32_t* pgdir;			//the virtual address of process's page table,!:thread:NULL(thread don't have page table)
 
 	struct virtual_addr userprog_vaddr;	// virtual address pool of user process 
+						
+	struct mem_block_desc u_block_desc[DESC_CNT]; //memory block descriptor of user process
 
 	uint32_t stack_magic;			//edge of stack
 };
