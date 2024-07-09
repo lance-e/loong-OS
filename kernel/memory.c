@@ -33,7 +33,6 @@
 
 
 
-
 //memory pool
 struct pool{
 	struct bitmap pool_bitmap;			//to manage the physic memory
@@ -122,7 +121,7 @@ static void page_table_add(void* _vaddr, void* _page_phyaddr){
 	uint32_t vaddr = (uint32_t) _vaddr,page_phyaddr = (uint32_t) _page_phyaddr;
 	uint32_t* pde = pde_ptr(vaddr);
 	uint32_t* pte = pte_ptr(vaddr);
-	// execute *pte must after pde had create,otherwise wile Page_Fault
+	// execute *pte must after pde had create,otherwise will Page_Fault
 	if(*pde & 0x00000001){
 		//make sure pte is not exist 
 		ASSERT(!(*pte & 0x00000001));
@@ -167,6 +166,7 @@ void* malloc_page(enum pool_flags pf,uint32_t pg_cnt){
 			//physic memory will roll back , will write in future
 			return NULL;
 		}
+
 		page_table_add((void*)vaddr,page_phyaddr);
 		vaddr += PG_SIZE;
 	}
@@ -424,7 +424,140 @@ void* sys_malloc(uint32_t size){
 
 }
 
-		
+//free memory 'ptr'
+void sys_free(void* ptr){
+	ASSERT( ptr != NULL);
+	if (ptr != NULL){
+		enum pool_flags pf;
+		struct pool* mem_pool;
+
+		//judge thread of process
+		if (running_thread()->pgdir == NULL){
+			ASSERT((uint32_t)ptr >= K_HEAP_START);
+			pf = PF_KERNEL;
+			mem_pool = &kernel_pool;
+		}else {
+			pf = PF_USER;
+			mem_pool = &user_pool;
+		}
+
+		lock_acquire(&mem_pool->lock);
+		struct mem_block* b = ptr;
+		struct arena* a = block2arena(b);
+
+		ASSERT(a->large == 1 || a->large == 0);
+		if (a->desc == NULL && a->large == true ){
+			mfree_page(pf , a , a->cnt);
+		}else {
+			//recycle the memory block into free_list
+			list_append(&a->desc->free_list , &b->free_elem);
+
+			//judge the all block in arena is it all free,
+			//if all free that free the whole arena
+			if (++a->cnt == a->desc->block_per_arena){
+				uint32_t index;
+				for (index = 0 ; index < a->desc->block_per_arena ; index++){
+					struct mem_block* b = arena2block(a , index);
+					ASSERT(elem_find(&a->desc->free_list ,  &b->free_elem));
+					list_remove(&b->free_elem);
+				}
+				mfree_page( pf , a , 1);
+			}
+		}
+		lock_release(&mem_pool->lock);
+	}
+}
+
+
+
+//free physic memory to physic memory pool
+void pfree(uint32_t pg_phy_addr){
+	struct pool* mem_pool;
+	uint32_t index = 0 ;
+	if (pg_phy_addr >= user_pool.phy_addr_start) {				//user memory pool
+		mem_pool = &user_pool;
+		index = (pg_phy_addr - user_pool.phy_addr_start ) / PG_SIZE;
+	}else {									//kernel memory pool
+		mem_pool = &kernel_pool;
+		index = (pg_phy_addr - kernel_pool.phy_addr_start) / PG_SIZE;
+	}
+	bitmap_set(&mem_pool->pool_bitmap , index , 0 );
+}
+
+//remove the map of 'vaddr', just to remove the pte of 'vaddr'
+static void page_table_pte_remove(uint32_t vaddr){
+	uint32_t* pte = pte_ptr(vaddr);
+	*pte &= PG_P_0 ;
+	asm volatile ("invlpg %0": : "m" (vaddr) : "memory");
+}
+
+//free the 'pg_cnt' consecutive pages virtual memory from virtual memory pool
+static void vaddr_remove(enum pool_flags pf , void* _vaddr , uint32_t pg_cnt){
+	uint32_t bit_start_index = 0 , vaddr = (uint32_t)_vaddr , count = 0 ;
+	if (pf == PF_KERNEL){				//kernel virtual memory pool
+		bit_start_index = (vaddr - kernel_vaddr.vaddr_start ) / PG_SIZE;
+		while(count < pg_cnt) {
+			bitmap_set(&kernel_vaddr.vaddr_bitmap , bit_start_index+ count++, 0);
+		}
+	}else {						//user virtual memory pool
+		struct task_struct * cur_thread = running_thread();
+		bit_start_index =( vaddr - cur_thread->userprog_vaddr.vaddr_start) / PG_SIZE;
+		while (count < pg_cnt ) {
+			bitmap_set(&cur_thread->userprog_vaddr.vaddr_bitmap,bit_start_index + count++ , 0 );
+		}
+	}
+}
+
+
+
+//free 'pg_cnt' page memory
+/***********************   mfree_page 	    ******************
+ * 	1.vaddr_remove :		free virtual memory into virtual memory pool
+ * 	2.pfree: 			free physic memory into  physic memory pool
+ * 	3.page_table_pte_remove: 	remvoe the map
+ ******************************************************************/
+void mfree_page(enum  pool_flags pf , void* _vaddr , uint32_t pg_cnt){
+	//struct pool* mem_pool;
+	uint32_t phy_addr ;
+	uint32_t vaddr = (uint32_t)_vaddr, count = 0;
+
+	ASSERT(pg_cnt > 0 && vaddr % PG_SIZE == 0 );
+
+	phy_addr = addr_v2p(vaddr); 		//get the physic memory by the virtual address;
+	
+	//make sure the target page is exist at the out of low 1mb , 1kb pdt and 1kb pt
+	ASSERT( (phy_addr % PG_SIZE ) == 0 && phy_addr >= 0x102000);
+
+	//judge use which memory pool
+	if (phy_addr >= user_pool.phy_addr_start){			//in user memory pool
+		vaddr -= PG_SIZE;	
+		while(count < pg_cnt){
+			vaddr += PG_SIZE;
+			phy_addr = addr_v2p(vaddr);
+			ASSERT((phy_addr % PG_SIZE ) == 0 && phy_addr >= user_pool.phy_addr_start);
+			pfree(phy_addr);
+			page_table_pte_remove(vaddr);
+			count++;
+		}
+	}else {
+		vaddr -= PG_SIZE;
+		while(count < pg_cnt){
+			vaddr += PG_SIZE;
+			phy_addr = addr_v2p(vaddr);
+			ASSERT((phy_addr % PG_SIZE ) == 0 &&	\
+			phy_addr >= kernel_pool.phy_addr_start &&	\
+			phy_addr < user_pool.phy_addr_start);
+			pfree(phy_addr);
+			page_table_pte_remove(vaddr);
+			count++;
+		}
+	}
+	//clear the target bit of virtual memory's bitmap
+	vaddr_remove(pf , _vaddr , pg_cnt);
+}
+
+
+
 
 
 void mem_init(){

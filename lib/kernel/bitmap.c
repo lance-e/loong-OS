@@ -79,6 +79,6 @@ void bitmap_set(struct bitmap* btmp , uint32_t bit_idx , int8_t value){
 	if (value){
 		btmp->bits[byte_idx] |= (BITMAP_MASK << bit_odd);
 	}else{
-		btmp->bits[byte_idx] &= (BITMAP_MASK << bit_odd);
+		btmp->bits[byte_idx] &= ~(BITMAP_MASK << bit_odd);
 	}
 }
