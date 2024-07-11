@@ -55,9 +55,11 @@ static void pic_init(void){
 	outb(PIC_S_DATA , 0x01);			//ICW4
 
 	//clock interrupt and keyboard interrupt:
-	// 0xfc :low 2 bit is 0 
-	outb(PIC_M_DATA,0xfc);
-	outb(PIC_S_DATA,0xff);
+	//open IRQ2 (the interrupt from slave chip must be transfer by main chip 
+	// 0xf8 :low 3 bit is 0 
+	outb(PIC_M_DATA,0xf8);
+	//open the the IRQ14 of slave chip (the interrupt of disk is send to this)
+	outb(PIC_S_DATA,0xbf);
 
 	put_str(" pic_init done\n");
 }

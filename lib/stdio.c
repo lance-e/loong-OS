@@ -3,9 +3,6 @@
 #include "global.h"
 #include "string.h"
 
-#define va_start(ap,v) ap=(va_list)&v 			//make ap point to the first argument
-#define va_arg(ap,t) *((t*)(ap += 4))			//make ap point to next arg and return
-#define va_end(ap) ap=NULL				//clear the ap
 
 //transform integer to ascii
 static void itoa(uint32_t value , char** buf_ptr_addr, uint8_t base){
