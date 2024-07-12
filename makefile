@@ -116,7 +116,7 @@ $(BUILD_DIR)/stdio-kernel.o: lib/kernel/stdio-kernel.c 	lib/kernel/stdio-kernel.
 
 $(BUILD_DIR)/ide.o: device/ide.c device/ide.h lib/stdint.h lib/kernel/list.h	\
 	lib/kernel/bitmap.h thread/sync.h kernel/global.h kernel/debug.h 	\
-	lib/kernel/stdio-kernel.h
+	lib/kernel/stdio-kernel.h device/timer.h lib/stdio.h
 	$(CC) $(CFLAGS) $< -o $@
 
 
