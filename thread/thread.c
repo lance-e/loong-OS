@@ -13,12 +13,24 @@
 #define PG_SIZE 4096
 
 struct task_struct* main_thread;			//main thread PCB
+struct task_struct* idle_thread;			//idle threqad PCB
+
 struct list thread_ready_list;				//ready queue
 struct list thread_all_list;				//all thread queue node
 struct lock pid_lock;	
 
 
 extern void switch_to(struct task_struct* cur,struct task_struct* next);
+
+//the thread run when os are free
+static void idle(void* arg ){
+	while(1){
+		thread_block(TASK_BLOCKED);
+		asm volatile("sti ; hlt" : : : "memory");
+	}
+}
+
+
 
 //get the current thread's PCB pointer
 struct task_struct* running_thread(){
@@ -127,6 +139,10 @@ void schedule(){
 		//maybe block
 		//don't need append to list,because current thread isn't at ready list
 	}
+
+	if (list_empty(&thread_ready_list)){
+		thread_unblock(idle_thread);
+	}
 	
 
 	ASSERT(!list_empty(&thread_ready_list));
@@ -149,6 +165,17 @@ void schedule(){
 
 }
 
+//yield thread
+void thread_yield(void){
+	struct task_struct* cur = running_thread();
+	enum intr_status old_status  = intr_disable();
+	ASSERT(!elem_find(&thread_ready_list , &cur->general_tag));
+	list_append(&thread_ready_list , &cur->general_tag);
+	cur->status = TASK_READY;
+	schedule();
+	intr_set_status(old_status);
+}
+	
 
 //block thread
 void thread_block(enum task_status stat){
@@ -182,6 +209,10 @@ void thread_init(void){
 	list_init(&thread_ready_list);
 	list_init(&thread_all_list);
 	lock_init(&pid_lock);
+	//make current thread into main thread
 	make_main_thread();
+	//create idle thread
+	idle_thread = thread_start("idle" , 10 , idle, NULL);
+
 	put_str("thread_init done\n");
 }

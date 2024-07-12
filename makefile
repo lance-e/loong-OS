@@ -35,7 +35,7 @@ $(BUILD_DIR)/interrupt.o : kernel/interrupt.c kernel/interrupt.h	\
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/timer.o : device/timer.c device/timer.h lib/stdint.h	\
-	lib/kernel/io.h lib/kernel/print.h
+	lib/kernel/io.h lib/kernel/print.h kernel/global.h
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/debug.o : kernel/debug.c kernel/debug.h 	\

@@ -5,6 +5,7 @@
 #include "debug.h"
 #include "thread.h"
 #include "stdint.h"
+#include "global.h"
 
 #define IRQ0_FREQUENCY 30000
 #define INPUT_FREQUENCY 1193180
@@ -14,6 +15,9 @@
 #define COUNTER0_MODE 2							
 #define READ_WRITE_LATCH 3
 #define PIT_CONTROL_PORT 0x43
+
+#define mil_seconds_per_intr 10
+
 
 uint32_t ticks;
 
@@ -53,4 +57,17 @@ void timer_init(){
 	put_str("timer_init done \n");
 }
 		       
+//sleep in ticks
+static void ticks_to_sleep(uint32_t sleep_ticks){
+	uint32_t start_ticks = ticks;
+	while(ticks - start_ticks < sleep_ticks){
+		thread_yield();
+	}
+}
 
+//sleep in millisecond (1 second = 1000 millisecond)
+void mtime_sleep(uint32_t m_seconds){
+	uint32_t sleep_ticks = DIV_ROUND_UP(m_seconds , mil_seconds_per_intr);
+	ASSERT(sleep_ticks >  0);
+	ticks_to_sleep(sleep_ticks);
+}
