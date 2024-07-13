@@ -12,7 +12,8 @@ OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o $(BUILD_
 	$(BUILD_DIR)/bitmap.o $(BUILD_DIR)/memory.o $(BUILD_DIR)/thread.o $(BUILD_DIR)/list.o	\
 	$(BUILD_DIR)/switch.o $(BUILD_DIR)/sync.o $(BUILD_DIR)/console.o $(BUILD_DIR)/keyboard.o \
 	$(BUILD_DIR)/ioqueue.o $(BUILD_DIR)/tss.o $(BUILD_DIR)/process.o $(BUILD_DIR)/syscall.o	\
-	$(BUILD_DIR)/syscall-init.o $(BUILD_DIR)/stdio.o $(BUILD_DIR)/stdio-kernel.o
+	$(BUILD_DIR)/syscall-init.o $(BUILD_DIR)/stdio.o $(BUILD_DIR)/stdio-kernel.o		\
+	$(BUILD_DIR)/ide.o
 
 
 ############   compile  C     ###########
@@ -26,7 +27,7 @@ $(BUILD_DIR)/main.o : kernel/main.c lib/kernel/print.h	\
 $(BUILD_DIR)/init.o : kernel/init.c kernel/init.h lib/kernel/print.h \
 	lib/stdint.h kernel/interrupt.h device/timer.h thread/thread.h	\
 	device/console.h device/keyboard.h userprog/tss.h 	\
-	userprog/syscall-init.h
+	userprog/syscall-init.h device/ide.h
 	$(CC) $(CFLAGS) $<  -o $@
 
 $(BUILD_DIR)/interrupt.o : kernel/interrupt.c kernel/interrupt.h	\
@@ -116,7 +117,8 @@ $(BUILD_DIR)/stdio-kernel.o: lib/kernel/stdio-kernel.c 	lib/kernel/stdio-kernel.
 
 $(BUILD_DIR)/ide.o: device/ide.c device/ide.h lib/stdint.h lib/kernel/list.h	\
 	lib/kernel/bitmap.h thread/sync.h kernel/global.h kernel/debug.h 	\
-	lib/kernel/stdio-kernel.h device/timer.h lib/stdio.h
+	lib/kernel/stdio-kernel.h device/timer.h lib/stdio.h kernel/memory.h	\
+	lib/kernel/io.h lib/string.h kernel/interrupt.h
 	$(CC) $(CFLAGS) $< -o $@
 
 

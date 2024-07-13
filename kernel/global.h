@@ -9,6 +9,8 @@
 #define true 1 
 #define false 0 
 
+#define UNUSED __attribute__((unused))
+
 //---------------------------- the attribute of SELECTOR----------------
 
 #define	RPL0	0

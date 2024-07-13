@@ -22,11 +22,11 @@ int main(void){
 	init_all();
 	intr_enable();
 
-	process_execute(u_proc_a , "user_proc_a");
-	process_execute(u_proc_b, "user_proc_b");
+	//process_execute(u_proc_a , "user_proc_a");
+	//process_execute(u_proc_b, "user_proc_b");
 	
-	thread_start("k_thread_a",31,k_thread_a,"I am thread_a ");
-	thread_start("k_thread_b",31,k_thread_b,"I am thread_b ");
+	//thread_start("k_thread_a",31,k_thread_a,"I am thread_a ");
+	//thread_start("k_thread_b",31,k_thread_b,"I am thread_b ");
 	while(1);
 	return 0;
 }

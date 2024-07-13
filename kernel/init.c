@@ -7,6 +7,7 @@
 #include "console.h"
 #include "keyboard.h"
 #include "syscall-init.h"
+#include "ide.h"
 
 //initial all module
 void init_all(){
@@ -19,4 +20,6 @@ void init_all(){
 	keyboard_init();
 	tss_init();
 	syscall_init();
+	ide_init();
+
 }
