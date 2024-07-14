@@ -5,6 +5,7 @@
 #include "bitmap.h"
 #include "sync.h"
 #include "global.h"
+#include "super_block.h"
 
 
 // the struct of partition
@@ -14,7 +15,7 @@ struct partition{
 	struct disk* my_disk;				//the disk of which this partition belong to
 	struct list_elem part_tag;			//the tag of list
 	char name[8];					//the name of partition
-	//struct super_block* sb;				//the super block
+	struct super_block* sb;				//the super block
 	struct bitmap block_bitmap;			//block bitmap
 	struct bitmap inode_bitmap;			//inode bitmap
 	struct list open_inode;				//the inode list of this partition
