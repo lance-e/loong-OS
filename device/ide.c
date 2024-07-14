@@ -298,13 +298,14 @@ static void partition_scan(struct disk* hd , uint32_t ext_lba){
 	ide_read(hd , ext_lba , bs , 1);	
 	uint8_t index = 0 ;
 	struct partition_table_entry* p = bs->partition_table;
-	while (index < 4 ){
+	//traversal 4 partition
+	while (index++ < 4 ){
 		if (p->fs_type == 0x5){						//extension partition
 			if (ext_lba_base != 0 ){				//sub extension partition
 				partition_scan(hd , p->start_lba + ext_lba_base);
 			}else {
 				ext_lba_base = p->start_lba; 
-				partition_scan(hd , ext_lba_base);
+				partition_scan(hd , p->start_lba);
 			}
 		}else if (p->fs_type != 0 ){
 			if (ext_lba == 0){
@@ -320,12 +321,13 @@ static void partition_scan(struct disk* hd , uint32_t ext_lba){
 				hd->logic_parts[l_no].sec_cnt = p->sec_cnt;
 				hd->logic_parts[l_no].my_disk = hd;
 				list_append(&partition_list , &hd->logic_parts[l_no].part_tag);
-				sprintf(hd->logic_parts[l_no].name , "%s%d" , hd->name , l_no + 1);
+				sprintf(hd->logic_parts[l_no].name , "%s%d" , hd->name , l_no + 5);
 				l_no++;
 				if (l_no >= 8 )		//8 is our regulation
 					return;
 			}
 		}
+
 		p++;
 	}
 	sys_free(bs);
@@ -347,6 +349,7 @@ void ide_init(void){
 	ASSERT(hd_cnt > 0);	
 	channel_cnt = DIV_ROUND_UP( hd_cnt , 2 );
 	struct ide_channel* channel;
+	list_init(&partition_list);
 	uint8_t dev_no = 0 ;
 	uint8_t channel_no = 0 ;
 	//handle the hard disk in every channel
@@ -366,7 +369,7 @@ void ide_init(void){
 		channel->expecting_intr = false;
 		lock_init(&channel->lock);
 		//initial to 0 . because of driver will do 'sema_down' to block thread
-		//until hard word have done , the interrupt handler will do 'sema_up' to wake up thread
+		//until hard disk have done , the interrupt handler will do 'sema_up' to wake up thread
 		sema_init(&channel->disk_done, 0);			
 
 		register_handler(channel->irq_no , intr_hd_handler);
@@ -377,7 +380,7 @@ void ide_init(void){
 			hd->dev_no = dev_no;
 			sprintf(hd->name  , "sd%c" , 'a' + channel_no * 2 + dev_no);
 			identify_disk(hd);				//get the paramter of disk
-			if (dev_no != 0){
+			if (dev_no != 0){				//not handle hd60M.img
 				partition_scan(hd , 0 );
 			}
 			p_no = 0 , l_no = 0 ;

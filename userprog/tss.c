@@ -63,7 +63,7 @@ static struct gdt_desc make_gdt_desc(uint32_t* desc_addr , uint32_t limit, uint8
 
 
 //create tss in GDT and reload GDT 
-void tss_init(){
+void tss_init(void){
 	put_str("tss_init start\n");
 	uint32_t tss_size = sizeof(tss);
 	memset(&tss , 0 , tss_size);
