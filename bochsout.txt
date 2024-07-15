@@ -19,7 +19,7 @@
 00000000000i[     ]   SB16 support: no
 00000000000i[     ]   USB support: no
 00000000000i[     ]   VGA extension support: vbe
-00000000000i[MEM0 ] allocated memory at 0x77afdd5dd010. after alignment, vector=0x77afdd5de000
+00000000000i[MEM0 ] allocated memory at 0x77f7e87dd010. after alignment, vector=0x77f7e87de000
 00000000000i[MEM0 ] 32.00MB
 00000000000i[MEM0 ] mem block size = 0x00100000, blocks=32
 00000000000i[MEM0 ] rom at 0xfffe0000/131072 ('/root/loong-OS/share/bochs/BIOS-bochs-latest')
@@ -29,7 +29,7 @@
 00000000000i[DEV  ] PIIX3 PCI-to-ISA bridge present at device 1, function 0
 00000000000i[     ] init_dev of 'cmos' plugin device by virtual method
 00000000000i[CMOS ] Using local time for initial clock
-00000000000i[CMOS ] Setting initial clock to: Sun Jul 14 14:33:59 2024 (time0=1720938839)
+00000000000i[CMOS ] Setting initial clock to: Mon Jul 15 22:21:30 2024 (time0=1721053290)
 00000000000i[     ] init_dev of 'dma' plugin device by virtual method
 00000000000i[DMA  ] channel 4 used by cascade
 00000000000i[     ] init_dev of 'pic' plugin device by virtual method
@@ -144,95 +144,95 @@
 00000000000i[XGUI ] Mouse capture off
 00000000025i[MEM0 ] allocate_block: block=0x0 used 0x1 of 0x20
 00000004661i[BIOS ] $Revision: 11545 $ $Date: 2012-11-11 09:11:17 +0100 (So, 11. Nov 2012) $
-00000400040i[KBD  ] reset-disable command received
-00000425802i[BIOS ] Starting rombios32
-00000426236i[BIOS ] Shutdown flag 0
-00000426831i[BIOS ] ram_size=0x02000000
-00000427252i[BIOS ] ram_end=32MB
-00000922929i[BIOS ] Found 1 cpu(s)
-00000937116i[BIOS ] bios_table_addr: 0x000fa448 end=0x000fcc00
-00000937150d[PCI  ] i440FX PMC read  register 0x00 value 0x00008086
-00000937156d[PCI  ] i440FX PMC read  register 0x02 value 0x00001237
-00000937180d[PCI  ] i440FX PMC read  register 0x00 value 0x00008086
-00000937186d[PCI  ] i440FX PMC read  register 0x02 value 0x00001237
-00000937210d[PCI  ] i440FX PMC read  register 0x59 value 0x00000000
-00001264913i[PCI  ] i440FX PMC write to PAM register 59 (TLB Flush)
-00001592840i[P2I  ] PCI IRQ routing: PIRQA# set to 0x0b
-00001592859i[P2I  ] PCI IRQ routing: PIRQB# set to 0x09
-00001592878i[P2I  ] PCI IRQ routing: PIRQC# set to 0x0b
-00001592897i[P2I  ] PCI IRQ routing: PIRQD# set to 0x09
-00001592907i[P2I  ] write: ELCR2 = 0x0a
-00001593673i[BIOS ] PIIX3/PIIX4 init: elcr=00 0a
-00001599481d[PCI  ] i440FX PMC read  register 0x00 value 0x00008086
-00001599487d[PCI  ] i440FX PMC read  register 0x02 value 0x00001237
-00001599512d[PCI  ] i440FX PMC read  register 0x0a value 0x00000600
-00001599519d[PCI  ] i440FX PMC read  register 0x00 value 0x00008086
-00001599526d[PCI  ] i440FX PMC read  register 0x02 value 0x00001237
-00001601346i[BIOS ] PCI: bus=0 devfn=0x00: vendor_id=0x8086 device_id=0x1237 class=0x0600
-00001601388d[PCI  ] i440FX PMC read  register 0x10 value 0x00000000
-00001601416d[PCI  ] i440FX PMC read  register 0x14 value 0x00000000
-00001601444d[PCI  ] i440FX PMC read  register 0x18 value 0x00000000
-00001601472d[PCI  ] i440FX PMC read  register 0x1c value 0x00000000
-00001601500d[PCI  ] i440FX PMC read  register 0x20 value 0x00000000
-00001601528d[PCI  ] i440FX PMC read  register 0x24 value 0x00000000
-00001601554d[PCI  ] i440FX PMC read  register 0x30 value 0x00000000
-00001601567d[PCI  ] i440FX PMC read  register 0x3d value 0x00000000
-00001603616i[BIOS ] PCI: bus=0 devfn=0x08: vendor_id=0x8086 device_id=0x7000 class=0x0601
-00001605725i[BIOS ] PCI: bus=0 devfn=0x09: vendor_id=0x8086 device_id=0x7010 class=0x0101
-00001605954i[PIDE ] new BM-DMA address: 0xc000
-00001606571i[BIOS ] region 4: 0x0000c000
-00001608596i[BIOS ] PCI: bus=0 devfn=0x0b: vendor_id=0x8086 device_id=0x7113 class=0x0680
-00001608829i[ACPI ] new irq line = 11
-00001608841i[ACPI ] new irq line = 9
-00001608870i[ACPI ] new PM base address: 0xb000
-00001608884i[ACPI ] new SM base address: 0xb100
-00001608912i[PCI  ] setting SMRAM control register to 0x4a
-00001773003i[CPU0 ] Enter to System Management Mode
-00001773014i[CPU0 ] RSM: Resuming from System Management Mode
-00001937032i[PCI  ] setting SMRAM control register to 0x0a
-00001942684d[PCI  ] i440FX PMC read  register 0x00 value 0x00008086
-00001942690d[PCI  ] i440FX PMC read  register 0x02 value 0x00001237
-00001942708d[PCI  ] i440FX PMC read  register 0x0a value 0x00000600
-00001942716d[PCI  ] i440FX PMC read  register 0x30 value 0x00000000
-00001951925i[BIOS ] MP table addr=0x000fa520 MPC table addr=0x000fa450 size=0xc8
-00001953681i[BIOS ] SMBIOS table addr=0x000fa530
-00001953739i[MEM0 ] allocate_block: block=0x1f used 0x2 of 0x20
-00001955876i[BIOS ] ACPI tables: RSDP addr=0x000fa650 ACPI DATA addr=0x01ff0000 size=0xf72
-00001959073i[BIOS ] Firmware waking vector 0x1ff00cc
-00001960862d[PCI  ] i440FX PMC read  register 0x59 value 0x00000030
-00001960871i[PCI  ] i440FX PMC write to PAM register 59 (TLB Flush)
-00001961599i[BIOS ] bios_table_cur_addr: 0x000fa674
-00002089216i[VBIOS] VGABios $Id: vgabios.c,v 1.75 2011/10/15 14:07:21 vruppert Exp $
-00002089287i[BXVGA] VBE known Display Interface b0c0
-00002089319i[BXVGA] VBE known Display Interface b0c5
-00002092244i[VBIOS] VBE Bios $Id: vbe.c,v 1.64 2011/07/19 18:25:05 vruppert Exp $
-00002431883i[BIOS ] ata0-0: PCHS=121/16/63 translation=none LCHS=121/16/63
-00002485916i[BIOS ] ata0-1: PCHS=162/16/63 translation=none LCHS=162/16/63
+00000425074i[KBD  ] reset-disable command received
+00000450798i[BIOS ] Starting rombios32
+00000451232i[BIOS ] Shutdown flag 0
+00000451827i[BIOS ] ram_size=0x02000000
+00000452248i[BIOS ] ram_end=32MB
+00000947679i[BIOS ] Found 1 cpu(s)
+00000961866i[BIOS ] bios_table_addr: 0x000fa448 end=0x000fcc00
+00000961900d[PCI  ] i440FX PMC read  register 0x00 value 0x00008086
+00000961906d[PCI  ] i440FX PMC read  register 0x02 value 0x00001237
+00000961930d[PCI  ] i440FX PMC read  register 0x00 value 0x00008086
+00000961936d[PCI  ] i440FX PMC read  register 0x02 value 0x00001237
+00000961960d[PCI  ] i440FX PMC read  register 0x59 value 0x00000000
+00001289663i[PCI  ] i440FX PMC write to PAM register 59 (TLB Flush)
+00001617590i[P2I  ] PCI IRQ routing: PIRQA# set to 0x0b
+00001617609i[P2I  ] PCI IRQ routing: PIRQB# set to 0x09
+00001617628i[P2I  ] PCI IRQ routing: PIRQC# set to 0x0b
+00001617647i[P2I  ] PCI IRQ routing: PIRQD# set to 0x09
+00001617657i[P2I  ] write: ELCR2 = 0x0a
+00001618423i[BIOS ] PIIX3/PIIX4 init: elcr=00 0a
+00001624231d[PCI  ] i440FX PMC read  register 0x00 value 0x00008086
+00001624237d[PCI  ] i440FX PMC read  register 0x02 value 0x00001237
+00001624262d[PCI  ] i440FX PMC read  register 0x0a value 0x00000600
+00001624269d[PCI  ] i440FX PMC read  register 0x00 value 0x00008086
+00001624276d[PCI  ] i440FX PMC read  register 0x02 value 0x00001237
+00001626096i[BIOS ] PCI: bus=0 devfn=0x00: vendor_id=0x8086 device_id=0x1237 class=0x0600
+00001626138d[PCI  ] i440FX PMC read  register 0x10 value 0x00000000
+00001626166d[PCI  ] i440FX PMC read  register 0x14 value 0x00000000
+00001626194d[PCI  ] i440FX PMC read  register 0x18 value 0x00000000
+00001626222d[PCI  ] i440FX PMC read  register 0x1c value 0x00000000
+00001626250d[PCI  ] i440FX PMC read  register 0x20 value 0x00000000
+00001626278d[PCI  ] i440FX PMC read  register 0x24 value 0x00000000
+00001626304d[PCI  ] i440FX PMC read  register 0x30 value 0x00000000
+00001626317d[PCI  ] i440FX PMC read  register 0x3d value 0x00000000
+00001628366i[BIOS ] PCI: bus=0 devfn=0x08: vendor_id=0x8086 device_id=0x7000 class=0x0601
+00001630475i[BIOS ] PCI: bus=0 devfn=0x09: vendor_id=0x8086 device_id=0x7010 class=0x0101
+00001630704i[PIDE ] new BM-DMA address: 0xc000
+00001631321i[BIOS ] region 4: 0x0000c000
+00001633346i[BIOS ] PCI: bus=0 devfn=0x0b: vendor_id=0x8086 device_id=0x7113 class=0x0680
+00001633579i[ACPI ] new irq line = 11
+00001633591i[ACPI ] new irq line = 9
+00001633620i[ACPI ] new PM base address: 0xb000
+00001633634i[ACPI ] new SM base address: 0xb100
+00001633662i[PCI  ] setting SMRAM control register to 0x4a
+00001797753i[CPU0 ] Enter to System Management Mode
+00001797764i[CPU0 ] RSM: Resuming from System Management Mode
+00001961782i[PCI  ] setting SMRAM control register to 0x0a
+00001967434d[PCI  ] i440FX PMC read  register 0x00 value 0x00008086
+00001967440d[PCI  ] i440FX PMC read  register 0x02 value 0x00001237
+00001967458d[PCI  ] i440FX PMC read  register 0x0a value 0x00000600
+00001967466d[PCI  ] i440FX PMC read  register 0x30 value 0x00000000
+00001976675i[BIOS ] MP table addr=0x000fa520 MPC table addr=0x000fa450 size=0xc8
+00001978431i[BIOS ] SMBIOS table addr=0x000fa530
+00001978489i[MEM0 ] allocate_block: block=0x1f used 0x2 of 0x20
+00001980626i[BIOS ] ACPI tables: RSDP addr=0x000fa650 ACPI DATA addr=0x01ff0000 size=0xf72
+00001983823i[BIOS ] Firmware waking vector 0x1ff00cc
+00001985612d[PCI  ] i440FX PMC read  register 0x59 value 0x00000030
+00001985621i[PCI  ] i440FX PMC write to PAM register 59 (TLB Flush)
+00001986349i[BIOS ] bios_table_cur_addr: 0x000fa674
+00002113966i[VBIOS] VGABios $Id: vgabios.c,v 1.75 2011/10/15 14:07:21 vruppert Exp $
+00002114037i[BXVGA] VBE known Display Interface b0c0
+00002114069i[BXVGA] VBE known Display Interface b0c5
+00002116994i[VBIOS] VBE Bios $Id: vbe.c,v 1.64 2011/07/19 18:25:05 vruppert Exp $
+00002456633i[BIOS ] ata0-0: PCHS=121/16/63 translation=none LCHS=121/16/63
+00002510666i[BIOS ] ata0-1: PCHS=162/16/63 translation=none LCHS=162/16/63
 00010000005i[XGUI ] charmap update. Font Height is 16
 00151073530i[BIOS ] Booting from 0000:7c00
 00151287612i[MEM0 ] allocate_block: block=0x1 used 0x3 of 0x20
-00151384415i[MEM0 ] allocate_block: block=0x2 used 0x4 of 0x20
-06244244439i[     ] Ctrl-C detected in signal handler.
-06244244440i[XGUI ] Mouse capture off
-06244244440i[     ] dbg: Quit
-06244244440i[CPU0 ] CPU is in protected mode (active)
-06244244440i[CPU0 ] CS.mode = 32 bit
-06244244440i[CPU0 ] SS.mode = 32 bit
-06244244440i[CPU0 ] EFER   = 0x00000000
-06244244440i[CPU0 ] | EAX=00000000  EBX=000700d4  ECX=c009eb67  EDX=c0009854
-06244244440i[CPU0 ] | ESP=c009efe0  EBP=c009effc  ESI=00070000  EDI=00000000
-06244244440i[CPU0 ] | IOPL=0 id vip vif ac vm rf nt of df IF tf SF zf AF PF CF
-06244244440i[CPU0 ] | SEG sltr(index|ti|rpl)     base    limit G D
-06244244440i[CPU0 ] |  CS:0008( 0001| 0|  0) 00000000 ffffffff 1 1
-06244244440i[CPU0 ] |  DS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-06244244440i[CPU0 ] |  SS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-06244244440i[CPU0 ] |  ES:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-06244244440i[CPU0 ] |  FS:0000( 0000| 0|  0) 00000000 00000000 0 0
-06244244440i[CPU0 ] |  GS:0018( 0003| 0|  0) c00b8000 00007fff 1 1
-06244244440i[CPU0 ] | EIP=c0001532 (c0001532)
-06244244440i[CPU0 ] | CR0=0xe0000011 CR2=0x00000000
-06244244440i[CPU0 ] | CR3=0x00100000 CR4=0x00000000
-06244244440d[PCI  ] Exit
-06244244440i[CMOS ] Last time is 1720938963 (Sun Jul 14 14:36:03 2024)
-06244244440i[XGUI ] Exit
-06244244440i[CTRL ] quit_sim called with exit code 0
+00151386675i[MEM0 ] allocate_block: block=0x2 used 0x4 of 0x20
+00279465962i[     ] Ctrl-C detected in signal handler.
+00279465963i[XGUI ] Mouse capture off
+00279465963i[     ] dbg: Quit
+00279465963i[CPU0 ] CPU is in protected mode (active)
+00279465963i[CPU0 ] CS.mode = 32 bit
+00279465963i[CPU0 ] SS.mode = 32 bit
+00279465963i[CPU0 ] EFER   = 0x00000000
+00279465963i[CPU0 ] | EAX=00000000  EBX=000700d4  ECX=00000001  EDX=c000b018
+00279465963i[CPU0 ] | ESP=c009efe0  EBP=c009effc  ESI=00070000  EDI=00000000
+00279465963i[CPU0 ] | IOPL=0 id vip vif ac vm rf nt of df IF tf SF zf AF PF CF
+00279465963i[CPU0 ] | SEG sltr(index|ti|rpl)     base    limit G D
+00279465963i[CPU0 ] |  CS:0008( 0001| 0|  0) 00000000 ffffffff 1 1
+00279465963i[CPU0 ] |  DS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+00279465963i[CPU0 ] |  SS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+00279465963i[CPU0 ] |  ES:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+00279465963i[CPU0 ] |  FS:0000( 0000| 0|  0) 00000000 00000000 0 0
+00279465963i[CPU0 ] |  GS:0018( 0003| 0|  0) c00b8000 00007fff 1 1
+00279465963i[CPU0 ] | EIP=c0001532 (c0001532)
+00279465963i[CPU0 ] | CR0=0xe0000011 CR2=0x00000000
+00279465963i[CPU0 ] | CR3=0x00100000 CR4=0x00000000
+00279465963d[PCI  ] Exit
+00279465963i[CMOS ] Last time is 1721053295 (Mon Jul 15 22:21:35 2024)
+00279465963i[XGUI ] Exit
+00279465963i[CTRL ] quit_sim called with exit code 0

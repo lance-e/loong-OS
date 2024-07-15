@@ -5,8 +5,6 @@
 #include "bitmap.h"
 #include "sync.h"
 #include "global.h"
-#include "super_block.h"
-
 
 // the struct of partition
 struct partition{
@@ -40,6 +38,7 @@ struct ide_channel{
 	struct semaphore disk_done;			//used for block and wake up driver
 	struct disk devices[2];				//a channel have two disk(main and slave)	
 };
+
 void ide_read(struct disk* hd , uint32_t lba , void* buf , uint32_t sec_cnt);
 void ide_write(struct disk* hd , uint32_t lba , void* buf , uint32_t sec_cnt);
 void intr_hd_handler(uint8_t irq_no);
