@@ -1,1 +1,137 @@
 #include "inode.h"
+#include "debug.h"
+#include "thread.h"
+
+
+
+//storage the position of inode
+struct inode_position{
+	bool two_sec;			//is it cross sector
+	uint32_t sec_lba;		//sector number where the inode are
+	uint32_t off_size;		//byte offset in this sector
+};
+
+
+//get the sector number and byte offset of inode
+static void inode_locate(struct partition* part , uint32_t inode_no , struct inode_position* inode_pos){
+	ASSERT(inode_no < 4096);	
+	uint32_t inode_table_lba = part->sb->inode_table_lba;
+
+	uint32_t inode_size = sizeof(struct inode);
+	uint32_t off_size = inode_no * inode_size; 		//byte offset
+	uint32_t off_sec = off_size  / 512;			//sector offset
+	uint32_t off_size_in_sec = off_size % 512;		//offset in sector
+	
+	//judge whether cross two sector
+	uint32_t left_in_sector = 512 - off_size_in_sec;
+	if (left_in_sector > inodde_size){
+		inode_pos->two_sec =  false;
+	}else {
+		inode_pos->two_sec =  true;
+	}
+	inode_pos->sec_lba = inode_table_lba + off_sec;
+	inode_pos->off_size = off_size_in_sec;
+}
+
+//write inode into partition
+void inode_sync(struct partition* part , struct inode* inode , void* io_buf){
+	uint8_t inode_no = inode->i_no;	
+	struct inode_position inode_pos;
+	inode_locate(part, inode_no , inode_pos);
+	ASSERT( inode_pos->sec_lba <= (part->start_lba + part->sec_cnt));
+
+	//clear the struct member of inode : inode_tag , i_open_cnts is unused in hard disk 
+	struct inode pure_inode;
+	memcpy(&pure_inode , inode , sizeof(struct inode));	
+	pure_inode.i_open_cnts = 0 ;
+	pure_inode.write_deny = false;
+	pure_inode.inode_tag.prev = pure_inode.inode.next = NULL;
+
+	char* inode_buf = (char*)io_buf;
+	if (inode_pos.two_sec){
+		//operate in sector , so read the before sector , spell the new data and write 
+		ide_read(part->my_disk , inode_pos.sec_lba , inode_buf ,2);
+		//spell
+		memcpy((inode_buf + inode_pos.off_size) ,&pure_inode , sizeof(struct inode));
+		//write the new spelled data
+		ide_write(part->my_disk , inode_pos.sec_lba , inode_buf , 2);
+	}else {
+		//operate in sector , so read the before sector , spell the new data and write 
+		ide_read(part->my_disk , inode_pos.sec_lba ,inode_buf , 1);
+		//spell
+		memcpy((inode_buf + inode_pos.off_size) ,&pure_inode , sizeof(struct inode));
+		//write the new spelled data
+		ide_write(part->my_disk , inode_pos.sec_lba , inode_buf , 1);
+	}
+}
+
+//open inode by inode_no
+struct inode* inode_open(struct partition* part , uint32_t inode_no){
+	//first to find in alread opened inode list  
+	struct list_elem* elem = part->open_inode.head.next;
+	struct inode*  =  inode_found;
+	while (elem != &part->open_inode.tail){
+		inode_found = elem2entry(struct inode , inode_tag , elem);
+		if (inode_found->i_no == inode_no){
+			inode_found->i_open_cnts ++;
+			return inode_found;
+		}
+		elem = elem->next;
+	}
+
+	//not find in opened list , so read from hard disk and append to opened list
+	struct inode_position inode_pos;
+	inode_locate(part , inode_no , inode_pos);
+
+	//in order to make the new inode shared by all process.So add in kernel space
+	//( make user process's page table = NULL , that malloc will create at kernel space
+	struct task_struct* cur = running_thread();
+	uint32_t* cur_pagedir_bak = cur->pgdir;
+	cur->pgdir = NULL;
+	inode_found = (struct inode*)sys_malloc(sizeof(struct inode));
+	cur->pg_dir= cur_pagedir_bak;
+
+	char* inode_buf;
+	if (inode_pos.two_sec){
+		inode_buf = (char*) sys_malloc(1024);
+		ide_read(part->my_disk , inode_pos->sec_lba , inode_buf , 2);
+	}else {
+		inode_buf = (char*) sys_malloc(512);
+		ide_read(part->my_disk , inode_pos->sec_lba , inode_buf , 1);
+	}
+
+	memset(inode_found , inode_buf + inode_pos.off_size , sizeof(struct inode));
+	list_push(&part->open_inode , &inode_found->inode_tag );
+	inode_found->i_open_cnts = 1;
+	
+	sys_free(inode_buf);
+	return inode_found;
+}
+	
+
+//close inode or reduce the number of inode had opened 
+void inode_close(struct inode* inode){
+	enum intr_status old_status= intr_disable();
+	if (--inode->i_open_cnts == 0 ){
+		list_remove(&inode->inode_tag);
+		struct task_struct* cur = running_thread();
+		uint32_t* cur_pgdir_bak = cur->pgdir;
+		cur->pgdir = NULL;
+		sys_free(inode);
+		cur->pgdir = cur_pgdir_bak;
+	}
+	intr_set_status(old_status);
+}
+
+//initial the target inode
+void inode_init(uint32_t inode_no , struct inode* new_inode){
+	new_inode->i_no = inode_no;
+	new_inode->i_size = 0;
+	new_inode->i_open_cnts = 0;
+	new_inode->write_deny = false;
+	uint8_t index = 0;
+	while(index < 13){
+		new_inode->i_sectors[index] = 0 ;
+		index++;
+	}
+}

@@ -89,6 +89,15 @@ void init_thread(struct task_struct* pthread,char* name,int prio){
 	pthread->ticks = prio;
 	pthread->elapsed_ticks= 0;
 	pthread->pgdir= NULL;
+	//stdin , stdout , stderr
+	pthread->fd_table[0] = 0 ;
+	pthread->fd_table[1] = 1 ;
+	pthread->fd_table[2] = 2 ;
+	//other set -1
+	uint8_t fd_index = 3;
+	while (fd_index < MAX_FILES_OPEN_PER_PROC){
+		pthread->fd_table[fd_index] = -1;
+	}
 	pthread->stack_magic = 0x88888888;			//magic number
 }
 

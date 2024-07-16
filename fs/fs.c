@@ -10,14 +10,101 @@
 #include "string.h"
 
 
+					
 extern uint8_t channel_cnt;
 extern struct list partition_list;
 extern struct ide_channel channels[2];
 
 
+struct partition* cur_part;		//default operation partition 
+					
+#define MAX_FILE_OPEN 32		//max file can open
+
+//file struct
+struct file{
+	uint32_t fd_pos;		//the operate position of file
+	uint32_t fd_flag;
+	struct inode* fd_inode;
+};
+
+//stand file descriptor
+enum std_fd{
+	stdin_no,
+	stdout_no,
+	stderr_no
+};
+
+//bitmap type
+enum bitmap_type{
+	INODE_BITMAP,
+	BLOCK_BITMAP
+};
+
+
+//get the partition named "part_name" from partition_list , and assign to "cur_part"
+static bool mount_partition(struct list_elem* pelem , int arg){
+	char* part_name = (char*) arg;
+	struct partition* part = elem2entry(struct partition , part_tag , pelem);
+	if (!(strcmp(part->name , part_name))){			//0 :mean equal
+		cur_part = part;
+		struct disk* hd = cur_part->my_disk;
+
+		/*********** read the super_block from hard disk into memory **************/
+
+		//sb_buf: storage the super_block read from hard disk
+		struct super_block* sb_buf = (struct super_block*)sys_malloc(SECTOR_SIZE);
+
+		//sb: in memory
+		cur_part->sb = (struct super_block*)sys_malloc(SECTOR_SIZE);
+		if (cur_part->sb == NULL){
+			PANIC("alloc memory failed!");
+		}
+
+		//read super_block from hard disk
+		memset(sb_buf , 0  , SECTOR_SIZE);
+		ide_read(hd , cur_part->start_lba + 1 , sb_buf , 1);
+
+		//copy the information of sb_buf into 'sb'
+		//(copy can filterate the unused message)
+		memcpy(cur_part->sb , sb_buf , sizeof(struct super_block));	
+
+		/*********** read the block bitmap from hard disk into memory **************/
+
+		cur_part->block_bitmap.bits = (uint8_t*)sys_malloc(sb_buf->block_bitmap_sects * SECTOR_SIZE);
+		if (cur_part->block_bitmap.bits == NULL){
+			PANIC("alloc memory failed!");
+		}
+		cur_part->block_bitmap.btmp_bytes_len = sb_buf->block_bitmap_sects * SECTOR_SIZE; 
+
+		//read block block from hard disk
+		ide_read(hd , sb_buf->block_bitmap_lba , cur_part->block_bitmap.bits , sb_buf->block_bitmap_sects);
+
+		/********** read the inode bitmap from hard disk into memory **************/
+
+		cur_part->inode_bitmap.bits = (uint8_t*)sys_malloc(sb_buf->inode_bitmap_sects * SECTOR_SIZE);
+		if (cur_part->inode_bitmap.bits == NULL){
+			PANIC("alloc memory failed!");
+		}
+		cur_part->inode_bitmap.btmp_bytes_len = sb_buf->inode_bitmap_sects * SECTOR_SIZE;
+
+		//read inode bitmap from hard disk
+		ide_read(hd , sb_buf->inode_bitmap_lba , cur_part->inode_bitmap.bits , sb_buf->inode_bitmap_sects);
+
+		/****************/
+
+		list_init(&cur_part->open_inode);
+		printk("mount %s done!\n" , part->name);
+		
+		return true;					//just for "list_traversal": ture that stop
+
+	}
+	return false;
+}
+				
+
 
 //format partition , create file system
-static void partition_format(struct disk* _hd , struct partition* part){
+static void partition_format( struct partition* part){
 	uint32_t boot_sector_sects = 1;
 	uint32_t super_block_sects = 1;
 	uint32_t inode_bitmap_sects = DIV_ROUND_UP(MAX_FILES_PER_PART , BITS_PER_SECTOR);
@@ -183,7 +270,7 @@ void filesys_init(void){
 						printk("%s has filesystem\n",part->name);
 					}else {
 						printk("formatting %s's partition %s......\n",hd->name, part->name);
-						partition_format(hd , part);
+						partition_format(part);
 					}
 				}
 				part_index ++;
@@ -194,6 +281,12 @@ void filesys_init(void){
 		channel_no++;				//next channel
 	}
 	sys_free(sb_buf);
+
+	//make sure default operate partition
+	char default_part[8] = "sdb1";
+	//mount partition
+	list_traversal(&partition_list , mount_partition ,(int)default_part);
 }
+
 
 

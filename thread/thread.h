@@ -5,6 +5,8 @@
 #include "memory.h"
 
 
+#define MAX_FILES_OPEN_PER_PROC 8			// the max number of open file in per process
+
 typedef int16_t pid_t;
 typedef void thread_func(void*);
 
@@ -79,6 +81,8 @@ struct task_struct {
 	uint8_t ticks;				//the time ticks of run in cpu
 
 	uint32_t elapsed_ticks;			//record the all ticks after run in cpu
+						
+	uint32_t fd_table[MAX_FILES_OPEN_PER_PROC] //file descriptor array
 
 	struct list_elem general_tag;		//the node of general list
 
