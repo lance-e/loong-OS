@@ -50,7 +50,7 @@ void sema_up(struct semaphore* psema){
 
 //get lock
 void lock_acquire(struct lock* plock){
-	if (plock->holder != running_thread){
+	if (plock->holder != running_thread()){
 		sema_down(&plock->semaphore);					//semaphore :P
 		plock->holder = running_thread();
 		ASSERT(plock->holder_repeat_nr ==  0 );

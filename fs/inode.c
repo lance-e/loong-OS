@@ -1,6 +1,9 @@
 #include "inode.h"
 #include "debug.h"
 #include "thread.h"
+#include "super_block.h"
+#include "string.h"
+#include "interrupt.h"
 
 
 
@@ -24,7 +27,7 @@ static void inode_locate(struct partition* part , uint32_t inode_no , struct ino
 	
 	//judge whether cross two sector
 	uint32_t left_in_sector = 512 - off_size_in_sec;
-	if (left_in_sector > inodde_size){
+	if (left_in_sector > inode_size){
 		inode_pos->two_sec =  false;
 	}else {
 		inode_pos->two_sec =  true;
@@ -37,15 +40,15 @@ static void inode_locate(struct partition* part , uint32_t inode_no , struct ino
 void inode_sync(struct partition* part , struct inode* inode , void* io_buf){
 	uint8_t inode_no = inode->i_no;	
 	struct inode_position inode_pos;
-	inode_locate(part, inode_no , inode_pos);
-	ASSERT( inode_pos->sec_lba <= (part->start_lba + part->sec_cnt));
+	inode_locate(part, inode_no , &inode_pos);
+	ASSERT( inode_pos.sec_lba <= (part->start_lba + part->sec_cnt));
 
 	//clear the struct member of inode : inode_tag , i_open_cnts is unused in hard disk 
 	struct inode pure_inode;
 	memcpy(&pure_inode , inode , sizeof(struct inode));	
 	pure_inode.i_open_cnts = 0 ;
 	pure_inode.write_deny = false;
-	pure_inode.inode_tag.prev = pure_inode.inode.next = NULL;
+	pure_inode.inode_tag.prev = pure_inode.inode_tag.next = NULL;
 
 	char* inode_buf = (char*)io_buf;
 	if (inode_pos.two_sec){
@@ -69,7 +72,7 @@ void inode_sync(struct partition* part , struct inode* inode , void* io_buf){
 struct inode* inode_open(struct partition* part , uint32_t inode_no){
 	//first to find in alread opened inode list  
 	struct list_elem* elem = part->open_inode.head.next;
-	struct inode*  =  inode_found;
+	struct inode* inode_found;
 	while (elem != &part->open_inode.tail){
 		inode_found = elem2entry(struct inode , inode_tag , elem);
 		if (inode_found->i_no == inode_no){
@@ -81,7 +84,7 @@ struct inode* inode_open(struct partition* part , uint32_t inode_no){
 
 	//not find in opened list , so read from hard disk and append to opened list
 	struct inode_position inode_pos;
-	inode_locate(part , inode_no , inode_pos);
+	inode_locate(part , inode_no , &inode_pos);
 
 	//in order to make the new inode shared by all process.So add in kernel space
 	//( make user process's page table = NULL , that malloc will create at kernel space
@@ -89,15 +92,15 @@ struct inode* inode_open(struct partition* part , uint32_t inode_no){
 	uint32_t* cur_pagedir_bak = cur->pgdir;
 	cur->pgdir = NULL;
 	inode_found = (struct inode*)sys_malloc(sizeof(struct inode));
-	cur->pg_dir= cur_pagedir_bak;
+	cur->pgdir= cur_pagedir_bak;
 
 	char* inode_buf;
 	if (inode_pos.two_sec){
 		inode_buf = (char*) sys_malloc(1024);
-		ide_read(part->my_disk , inode_pos->sec_lba , inode_buf , 2);
+		ide_read(part->my_disk , inode_pos.sec_lba , inode_buf , 2);
 	}else {
 		inode_buf = (char*) sys_malloc(512);
-		ide_read(part->my_disk , inode_pos->sec_lba , inode_buf , 1);
+		ide_read(part->my_disk , inode_pos.sec_lba , inode_buf , 1);
 	}
 
 	memset(inode_found , inode_buf + inode_pos.off_size , sizeof(struct inode));

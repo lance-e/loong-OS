@@ -73,7 +73,7 @@ struct thread_stack{
 
 //the PCB 
 struct task_struct {
-	uint32_t self_kstack;
+	uint32_t* self_kstack;
 	pid_t pid;
 	enum task_status status;
 	char name[16];
@@ -82,7 +82,7 @@ struct task_struct {
 
 	uint32_t elapsed_ticks;			//record the all ticks after run in cpu
 						
-	uint32_t fd_table[MAX_FILES_OPEN_PER_PROC] //file descriptor array
+	int32_t fd_table[MAX_FILES_OPEN_PER_PROC]; //file descriptor array
 
 	struct list_elem general_tag;		//the node of general list
 

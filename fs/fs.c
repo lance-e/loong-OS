@@ -1,5 +1,4 @@
 #include "fs.h"
-#include "stdint.h"
 #include "global.h"
 #include "super_block.h"
 #include "dir.h"
@@ -8,38 +7,19 @@
 #include "ide.h"
 #include "debug.h"
 #include "string.h"
+#include "file.h"
 
 
 					
 extern uint8_t channel_cnt;
 extern struct list partition_list;
 extern struct ide_channel channels[2];
+extern struct file file_table[MAX_FILE_OPEN];
+extern struct dir root_dir;
 
 
 struct partition* cur_part;		//default operation partition 
 					
-#define MAX_FILE_OPEN 32		//max file can open
-
-//file struct
-struct file{
-	uint32_t fd_pos;		//the operate position of file
-	uint32_t fd_flag;
-	struct inode* fd_inode;
-};
-
-//stand file descriptor
-enum std_fd{
-	stdin_no,
-	stdout_no,
-	stderr_no
-};
-
-//bitmap type
-enum bitmap_type{
-	INODE_BITMAP,
-	BLOCK_BITMAP
-};
-
 
 //get the partition named "part_name" from partition_list , and assign to "cur_part"
 static bool mount_partition(struct list_elem* pelem , int arg){
@@ -286,7 +266,164 @@ void filesys_init(void){
 	char default_part[8] = "sdb1";
 	//mount partition
 	list_traversal(&partition_list , mount_partition ,(int)default_part);
+
+	//open root dir
+	open_root_dir(cur_part);
+	printk("the root_dir lba:%d\n",root_dir.inode->i_sectors[12]);
+	//inital file_table
+	uint32_t fd_index = 0 ;
+	while(fd_index  < MAX_FILE_OPEN){
+		file_table[fd_index++].fd_inode = NULL;
+	}
 }
 
 
 
+//parse the path :
+//eg: "///a/b" , name_store : a , return pathname: /b. 
+static char* path_parse(char* pathname , char* name_store){
+	if (pathname[0] == '/' ){
+		while(*(++pathname) == '/');		//skip lisk this: "////a/b"
+	}
+	while(*pathname != '/' && *pathname!= 0 ){
+		*name_store++ = *pathname++;
+	}
+	if (pathname[0] == 0){
+		return NULL;
+	}
+	return pathname;
+}
+
+//return the depth of path
+int32_t path_depth_cnt(char* pathname){
+	ASSERT(pathname != NULL);
+	char* p = pathname;
+	char name[MAX_FILE_NAME_LEN];
+
+	uint32_t depth = 0 ;
+	p = path_parse(p , name);
+	while (name[0]){
+		depth++;
+		memset(name , 0 , MAX_FILE_NAME_LEN);
+		if (p){					//p != NULL, continue
+			p = path_parse( p, name);
+		}
+	}
+	return depth;
+}
+
+
+//search file
+static int search_file(const char* pathname , struct path_search_record* searched_record){
+	//if search root dir , than direct return
+	if (!strcmp(pathname , "/" ) || !strcmp(pathname ,"/.") || !strcmp(pathname , "/..")){
+		searched_record->searched_path[0] = 0;			
+		searched_record->parent_dir =  &root_dir;
+		searched_record->file_type = FT_DIRECTORY;
+		return 0 ;
+	}
+	uint32_t path_len = strlen(pathname);
+	ASSERT(pathname[0] == '/' && path_len > 1 && path_len < MAX_PATH_LEN);
+
+	char* sub_path = (char*) pathname;
+	struct dir* parent_dir = &root_dir;
+	struct dir_entry dir_e;
+	char name[MAX_PATH_LEN] = {0};			//record parsed name after path_parse
+	
+	searched_record->parent_dir = parent_dir;
+	searched_record->file_type = FT_UNKNOWN;
+	uint32_t parent_inode_no = 0 ;			//inode number of parent directory
+								
+	sub_path = path_parse(sub_path, name);
+	while (name[0]){
+		ASSERT(strlen(searched_record->searched_path) < 512);
+
+		strcat(searched_record->searched_path , "/");
+		strcat(searched_record->searched_path , name);
+	
+		printk("the parent_dir lba:%d\n",parent_dir->inode->i_sectors[12]);
+
+		if (search_dir_entry(cur_part , parent_dir , name ,&dir_e)){
+			if (sub_path){
+				sub_path = path_parse(sub_path , name);
+			}
+			if (dir_e.f_type == FT_DIRECTORY){		//directory
+				parent_inode_no = parent_dir->inode->i_no;
+				dir_close(parent_dir);	
+				parent_dir = dir_open(cur_part , dir_e.i_no);
+				searched_record->parent_dir = parent_dir;
+				continue;
+			}else if (dir_e.f_type == FT_REGULAR){		//file
+				searched_record->file_type = FT_REGULAR;
+				return dir_e.i_no;
+			}
+		}else {	 //not found
+			//don't close the parent_dir , will used in create
+			return -1;
+		}
+	}
+
+	//only find directory, so return it's parent directory
+	dir_close(searched_record->parent_dir);
+	searched_record->parent_dir = dir_open(cur_part , parent_inode_no);
+	searched_record->file_type = FT_DIRECTORY;
+
+	return dir_e.i_no;
+}
+
+//open or create file . success return file descriptor , fail return -1
+int32_t sys_open(const char* pathname ,uint8_t flags){
+	if (pathname[strlen(pathname) - 1] == '/' ){
+		printk("can't open a directory %s\n", pathname);
+		return -1;
+	}
+
+	ASSERT(flags <= 7);
+	int32_t fd = -1;
+
+	struct path_search_record searched_record ; 
+	memset(&searched_record ,  0 , sizeof(struct path_search_record));
+	
+	int32_t path_depth = path_depth_cnt((char*) pathname);
+	
+	
+	//determine if the file exist
+	int inode_no =  search_file(pathname , &searched_record);
+	bool found = inode_no == -1 ? false : true;
+
+	if (searched_record.file_type == FT_DIRECTORY){
+		printk("can't open a directory with open() , use opendir() to instead\n");
+		dir_close(searched_record.parent_dir);
+		return -1;
+	}
+
+	int32_t path_searched_depth = path_depth_cnt(searched_record.searched_path);
+	if (path_searched_depth != path_depth){
+		printk("cannot access %s: Not a directory , subpath %s is't exist\n",	\
+				pathname , searched_record.searched_path);
+		dir_close(searched_record.parent_dir);
+		return -1;
+	}
+
+	if (!found && !(flags & O_CREAT)) {
+		printk("in path %s , file %s isn't exist \n" , pathname , 	\
+				(strrchr(searched_record.searched_path, '/') + 1));
+		dir_close(searched_record.parent_dir);
+		return -1;
+	}else if (found && flags & O_CREAT){
+		printk("%s has already exist!\n" , pathname);
+		dir_close(searched_record.parent_dir);
+		return -1;
+	}
+
+	switch(flags & O_CREAT){
+		case O_CREAT:
+			printk("creating file\n");
+			fd = file_create(searched_record.parent_dir , (strrchr(pathname, '/' ) + 1) , flags);
+			dir_close(searched_record.parent_dir);
+	}
+
+	//thie fd is the pcb's fd_table index , not the index of global file_table
+	return fd;
+}	
+	

@@ -3,7 +3,9 @@
 #include "memory.h"
 #include "string.h"
 #include "stdio-kernel.h"
-#include "fs.h"
+#include "super_block.h"
+#include "debug.h"
+#include "file.h"
 
 
 extern struct partition* cur_part;
@@ -12,7 +14,7 @@ struct dir root_dir;				//root direcotory
 
 //open root directory
 void open_root_dir(struct partition* part){
-	root_dir.inode = inode_open(part->sb->root_inode_no);
+	root_dir.inode = inode_open(part , part->sb->root_inode_no);
 	root_dir.dir_pos = 0;
 }
 
@@ -20,7 +22,7 @@ void open_root_dir(struct partition* part){
 //open dir by "inode_no"
 struct dir* dir_open(struct partition* part , uint32_t inode_no){
 	struct dir* pdir = (struct dir*)sys_malloc(sizeof(struct dir));
-	pdir->inode = inode_open(part->sb->root_inode_no);
+	pdir->inode = inode_open(part ,inode_no);
 	pdir->dir_pos =  0;
 	return pdir;
 }
@@ -49,9 +51,9 @@ bool search_dir_entry(struct partition* part , struct dir* pdir , const char* na
 
 	//now all_block had storage all sectors used in this file / directory
 	
-	uint8_t buf = (uint8_t *) sys_malloc(SECTOR_SIZE);
+	uint8_t* buf = (uint8_t *) sys_malloc(SECTOR_SIZE);
 	struct dir_entry* p_de = (struct dir_entry*)buf;
-	uint32_t dir_entry_size = part->sb.dir_entry_size;	
+	uint32_t dir_entry_size = part->sb->dir_entry_size;	
 	uint32_t dir_entry_cnt = SECTOR_SIZE / dir_entry_size;	//the number of dir_entry in a sector
 
 	//begin to search in all blocks
@@ -95,9 +97,9 @@ void dir_close(struct dir* dir){
 }
 
 //initial directory entry in memory
-void dir_entry_init(char* filename , uint32_t inode_no ,uint8_t file_type, struct dir_entry* p_de){
+void create_dir_entry(char* filename , uint32_t inode_no ,uint8_t file_type, struct dir_entry* p_de){
 	ASSERT(strlen(filename) <= MAX_FILE_NAME_LEN);
-	memset(p_de->filename , filename , strlen(filename));
+	memcpy(p_de->filename , filename , strlen(filename));
 	p_de->i_no = inode_no;
 	p_de->f_type = file_type;
 }
@@ -156,9 +158,9 @@ bool sync_dir_entry(struct dir* parent_dir, struct dir_entry* p_de ,void* io_buf
 					block_bitmap_idx = dir_inode->i_sectors[12] - 	\
 							   cur_part->sb->data_start_lba;
 					bitmap_set(&cur_part->block_bitmap , block_bitmap_idx , 0 );
-					idr_inode->i_sectors[12] = 0 ;
+					dir_inode->i_sectors[12] = 0 ;
 					printk("alloc block bitmap for sync_dir_entry failed \n");
-					return fasle;
+					return false;
 				}
 				//sync after allocate block
 				block_bitmap_idx = block_lba - cur_part->sb->data_start_lba;
@@ -167,31 +169,31 @@ bool sync_dir_entry(struct dir* parent_dir, struct dir_entry* p_de ,void* io_buf
 
 				all_blocks[block_idx] = block_lba;
 				//write the address of 0th indirect block into indirect block table
-				ide_write(cur_part->my_disk , idr_inode->i_sectors[12] , all_block + 12 , 1);
+				ide_write(cur_part->my_disk , dir_inode->i_sectors[12] , all_blocks + 12 , 1);
 
 			}else {
 				all_blocks[block_idx] = block_lba;
 				//write the address of indirect block into indirect block table
-				ide_write(cur_part->my_disk , idr_inode->i_sectors[12] , all_block + 12, 1);
+				ide_write(cur_part->my_disk , dir_inode->i_sectors[12] , all_blocks + 12, 1);
 			}
 
 			//write the new directory entry "p_de" into the new allocate block
 			memset(io_buf , 0 , 512);	//clear
 			memcpy(io_buf , p_de , dir_entry_size);
-			ide_write(cur_part->my_disk  all_block[block_idx] , io_buf , 1);
+			ide_write(cur_part->my_disk,   all_blocks[block_idx] , io_buf , 1);
 			dir_inode->i_size += dir_entry_size;
 			return true;
 
 		}
 		//block already exist ,read into memory ,and find empty directory entry in it
-		ide_read(cur_part->my_disk , all_block[block_idx] , io_buf , 1);
+		ide_read(cur_part->my_disk , all_blocks[block_idx] , io_buf , 1);
 		
 		uint8_t dir_entry_idx = 0 ;
 		while(dir_entry_idx < dir_entrys_per_sec){
 			if((dir_e + dir_entry_idx)->f_type == FT_UNKNOWN){
 				memcpy(dir_e + dir_entry_idx , p_de, dir_entry_size);
-				ide_write(cur_part->my_disk , all_block[block_idx] , io_buf , 1);
-				dir_node->i_size += dir_entry_size;
+				ide_write(cur_part->my_disk , all_blocks[block_idx] , io_buf , 1);
+				dir_inode->i_size += dir_entry_size;
 				return true;
 			}				
 			dir_entry_idx++;
