@@ -2,7 +2,6 @@
 #define __DEVICE_CONSOLE_H
 #include "stdint.h"
 void console_init(void);
-void console_init(void);
 void console_acquire(void);
 void console_release(void);
 void console_put_str(char* str);

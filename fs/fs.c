@@ -8,6 +8,8 @@
 #include "debug.h"
 #include "string.h"
 #include "file.h"
+#include "thread.h"
+#include "console.h"
 
 
 					
@@ -418,9 +420,56 @@ int32_t sys_open(const char* pathname ,uint8_t flags){
 			printk("creating file\n");
 			fd = file_create(searched_record.parent_dir , (strrchr(pathname, '/' ) + 1) , flags);
 			dir_close(searched_record.parent_dir);
+		default:
+			fd = file_open(inode_no , flags);
+			
 	}
 
 	//thie fd is the pcb's fd_table index , not the index of global file_table
 	return fd;
 }	
 	
+
+//transform file descriptor into index of file_table
+static uint32_t fd_local2global(uint32_t fd_local){
+	struct task_struct* cur = running_thread();
+	int32_t global_fd = cur->fd_table[fd_local];
+	ASSERT( global_fd >= 0 && global_fd < MAX_FILE_OPEN);
+	return (uint32_t)global_fd;
+}
+
+
+//close file
+int32_t  sys_close(int32_t fd){
+	int32_t ret = -1;
+	if (fd > 2 ){
+		uint32_t global_fd = fd_local2global(fd);
+		ret = file_close(&file_table[global_fd]);
+		running_thread()->fd_table[fd] = -1;
+	}
+	return ret;
+}
+
+//write "count" of  data from "buf" into file
+int32_t sys_write(int32_t fd ,const void* buf , uint32_t count){
+	if (fd < 0 ){
+		printk("sys_write: fd error\n");		
+		return -1;
+	}
+	if (fd == stdout_no){
+		char tmp_buf[1024] = {0};
+		memcpy(tmp_buf , (char*)buf , count);
+		console_put_str(tmp_buf);
+		return count;
+	}
+	uint32_t global_fd = fd_local2global(fd);
+	struct file* wr_file = &file_table[global_fd];
+	if (wr_file->fd_flag & O_WRONLY || wr_file->fd_flag & O_RDWR){
+		uint32_t bytes_written = file_write(wr_file , buf ,count);
+		return bytes_written;
+	}else{
+		console_put_str("sys_write: not allowed to write file without flag O_WRONLY or O_RDWR\n");
+		return -1;
+	}
+
+}	

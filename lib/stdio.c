@@ -70,7 +70,7 @@ uint32_t printf( const char* format, ...){
 	char buf[1024] = {0};				// save the finally string
 	len = vsprintf(buf,format,args);
 	va_end(args);
-	write(buf);
+	write(1, buf ,strlen(buf));
 	return len;
 }
 

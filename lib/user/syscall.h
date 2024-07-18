@@ -11,7 +11,7 @@ enum SYSCALL_NR{
 
 
 uint32_t getpid(void);
-uint32_t write(char* str);
+uint32_t write(int32_t fd , const void* buf , uint32_t count);
 void* malloc(uint32_t size);
 void free(void* ptr);
 

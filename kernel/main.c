@@ -10,7 +10,7 @@
 #include "syscall-init.h"
 #include "stdio.h"
 #include "memory.h"
-#include "../fs/fs.h"
+#include "fs.h"
 
 void k_thread_a(void*);
 void k_thread_b(void*);
@@ -28,7 +28,11 @@ int main(void){
 	
 	//thread_start("k_thread_a",31,k_thread_a,"I am thread_a ");
 	//thread_start("k_thread_b",31,k_thread_b,"I am thread_b ");
-	sys_open("/file1" , O_CREAT);
+	uint32_t fd = sys_open("/file1" , O_WRONLY);
+	printf("fd:%d\n", fd);
+	sys_write(fd , "hello_world\n", 12);
+	sys_close(fd);
+	printf("%d close now\n", fd);
 	while(1);
 	return 0;
 }

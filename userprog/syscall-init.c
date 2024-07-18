@@ -2,8 +2,8 @@
 #include "syscall.h"
 #include "thread.h"
 #include "print.h"
-#include "console.h"
 #include "string.h"
+#include "fs.h"
 
 
 #define syscall_nr 32
@@ -14,11 +14,7 @@ syscall syscall_table[syscall_nr]; 			//the member of array is function pointer
 uint32_t sys_getpid(void){
 	return running_thread()->pid;
 }
-//write string and return the length of string
-uint32_t sys_write(char* str){
-	console_put_str(str);
-	return strlen(str);
-}
+
 
 void syscall_init(void){
 	put_str("syscall_init start\n");

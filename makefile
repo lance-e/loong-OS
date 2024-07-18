@@ -3,7 +3,7 @@ ENTRY_POINT = 0xc0001500
 AS = nasm 
 CC = gcc
 LD = ld
-LIB = -I lib/ -I lib/kernel/ -I lib/user/ -I kernel/ -I device/ -I thread/ -I userprog/
+LIB = -I lib/ -I lib/kernel/ -I lib/user/ -I kernel/ -I device/ -I thread/ -I userprog/ -I fs/
 ASFLAGS = -f elf
 CFLAGS = -m32 -Wall $(LIB) -c -fno-builtin -W -Wstrict-prototypes -Wmissing-prototypes
 LDFLAGS = -m elf_i386 -Ttext $(ENTRY_POINT) -e main 
@@ -106,7 +106,8 @@ $(BUILD_DIR)/syscall.o : lib/user/syscall.c lib/user/syscall.h 	\
 
 $(BUILD_DIR)/syscall-init.o : userprog/syscall-init.c		\
 	userprog/syscall-init.h thread/thread.h lib/kernel/print.h	\
-	lib/stdint.h lib/user/syscall.h device/console.h lib/string.h
+	lib/stdint.h lib/user/syscall.h lib/string.h		\
+	fs/fs.h
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/stdio.o : lib/stdio.c lib/stdio.h  lib/user/syscall.h	\
@@ -125,12 +126,13 @@ $(BUILD_DIR)/ide.o: device/ide.c device/ide.h lib/stdint.h lib/kernel/list.h	\
 
 $(BUILD_DIR)/fs.o: fs/fs.c fs/fs.h kernel/global.h fs/super_block.h fs/dir.h 	\
 	lib/kernel/stdio-kernel.h kernel/memory.h kernel/debug.h device/ide.h	\
-	lib/stdint.h lib/string.h fs/file.h
+	lib/stdint.h lib/string.h fs/file.h thread/thread.h device/console.h
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/file.o: fs/file.c fs/file.h lib/stdint.h device/ide.h fs/fs.h 		\
 	lib/kernel/stdio-kernel.h thread/thread.h lib/kernel/bitmap.h fs/super_block.h	\
-	fs/dir.h kernel/memory.h fs/inode.h lib/string.h fs/dir.h
+	fs/dir.h kernel/memory.h fs/inode.h lib/string.h fs/dir.h kernel/interrupt.h	\
+	kernel/global.h kernel/debug.h
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/dir.o: fs/dir.c fs/dir.h lib/stdint.h fs/inode.h fs/fs.h kernel/global.h	\
