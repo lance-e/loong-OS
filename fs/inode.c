@@ -103,7 +103,7 @@ struct inode* inode_open(struct partition* part , uint32_t inode_no){
 		ide_read(part->my_disk , inode_pos.sec_lba , inode_buf , 1);
 	}
 
-	memset(inode_found , inode_buf + inode_pos.off_size , sizeof(struct inode));
+	memcpy(inode_found , inode_buf + inode_pos.off_size , sizeof(struct inode));
 	list_push(&part->open_inode , &inode_found->inode_tag );
 	inode_found->i_open_cnts = 1;
 	

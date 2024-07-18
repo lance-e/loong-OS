@@ -269,7 +269,6 @@ void filesys_init(void){
 
 	//open root dir
 	open_root_dir(cur_part);
-	printk("the root_dir lba:%d\n",root_dir.inode->i_sectors[12]);
 	//inital file_table
 	uint32_t fd_index = 0 ;
 	while(fd_index  < MAX_FILE_OPEN){
@@ -341,8 +340,6 @@ static int search_file(const char* pathname , struct path_search_record* searche
 		strcat(searched_record->searched_path , "/");
 		strcat(searched_record->searched_path , name);
 	
-		printk("the parent_dir lba:%d\n",parent_dir->inode->i_sectors[12]);
-
 		if (search_dir_entry(cur_part , parent_dir , name ,&dir_e)){
 			if (sub_path){
 				sub_path = path_parse(sub_path , name);
