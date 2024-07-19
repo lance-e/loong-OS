@@ -420,7 +420,9 @@ int32_t sys_open(const char* pathname ,uint8_t flags){
 			printk("creating file\n");
 			fd = file_create(searched_record.parent_dir , (strrchr(pathname, '/' ) + 1) , flags);
 			dir_close(searched_record.parent_dir);
+			break;
 		default:
+			//other case :O_RDONLY , O_WRONLY ,O_RDWR
 			fd = file_open(inode_no , flags);
 			
 	}
@@ -473,3 +475,88 @@ int32_t sys_write(int32_t fd ,const void* buf , uint32_t count){
 	}
 
 }	
+
+//read "count" of data from file into "buf"
+int32_t sys_read(int32_t fd ,void* buf , uint32_t count){
+	if (fd < 0){
+		printk("sys_read: fd error\n");
+		return -1;
+	}
+	ASSERT(buf != NULL);
+	uint32_t global_fd = fd_local2global(fd);
+	return file_read(&file_table[global_fd] , buf , count);
+
+}
+
+//reset the offset pointer for file read and write operate
+int32_t sys_lseek(int32_t fd , int32_t offset , uint8_t whence){
+	if (fd < 0 ){
+		printk("sys_lseek: fd error\n");
+		return -1;
+	}
+	ASSERT(whence > 0 && whence <4 );
+	uint32_t global_fd = fd_local2global(fd);
+	struct file* file = &file_table[global_fd];
+	int32_t new_pos = 0 ;
+	int32_t file_size = (int32_t)file->fd_inode->i_size;
+	switch (whence){
+		case SEEK_SET:
+			new_pos = offset;
+			break;
+		case SEEK_CUR:
+			new_pos = (int32_t)file->fd_pos + offset;
+			break;
+		case SEEK_END:			//in this case , offset must less than 0
+			new_pos = file_size + offset;
+	}
+	if (new_pos < 0 || new_pos > (file_size + 1)){
+		return -1;	
+	}
+	file->fd_pos = new_pos;
+	return file->fd_pos;
+}
+
+
+//delete file (not directory)
+int32_t sys_unlink(const char* pathname){
+	//1. to inspect is it exist 
+	struct path_search_record search_record;
+	memset(&search_record , 0 , sizeof(struct path_search_record));
+	int inode_no = search_file(pathname , &search_record);
+	ASSERT(inode_no != 0 );
+	if (inode_no == -1){
+		printk("file %s not found\n" , pathname);
+		dir_close(search_record.parent_dir);
+		return -1;
+	}else if (search_record.file_type == FT_DIRECTORY){
+		printk("can't delete directory with sys_unlink() , you should use sys_rmdir() to instead\n");
+		dir_close(search_record.parent_dir);
+		return -1;
+	}
+
+	//2. to inspect is it using
+	uint32_t file_idx = 0 ;
+	while (file_idx < MAX_FILE_OPEN){
+		if (file_table[file_idx].fd_inode != NULL && file_table[file_idx].fd_inode->i_no == inode_no){
+			break;
+		}
+		file_idx++;
+	}
+
+	//mean this file are using 
+	if (file_idx < MAX_FILE_OPEN){
+		printk("file %s is in use , not allow to delete\n", pathname);
+		dir_close(search_record.parent_dir);
+		return -1;
+	}
+
+	ASSERT(file_idx == MAX_FILE_OPEN);
+	void* io_buf = sys_malloc(SECTOR_SIZE + SECTOR_SIZE);
+	struct dir* parent_dir = search_record.parent_dir;
+	//delete
+	delete_dir_entry(cur_part , parent_dir , inode_no , io_buf);
+	inode_release(cur_part , inode_no);
+	sys_free(io_buf);
+	dir_close(search_record.parent_dir);
+	return 0;
+}

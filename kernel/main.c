@@ -1,6 +1,7 @@
 #include "print.h"
 #include "thread.h"
 #include "init.h"
+#include "string.h"
 #include "interrupt.h"
 #include "console.h"
 #include "ioqueue.h"
@@ -23,14 +24,17 @@ int main(void){
 	init_all();
 	intr_enable();
 
-	//process_execute(u_proc_a , "user_proc_a");
-	//process_execute(u_proc_b, "user_proc_b");
+	process_execute(u_proc_a , "user_proc_a");
+	process_execute(u_proc_b, "user_proc_b");
 	
-	//thread_start("k_thread_a",31,k_thread_a,"I am thread_a ");
-	//thread_start("k_thread_b",31,k_thread_b,"I am thread_b ");
-	uint32_t fd = sys_open("/file1" , O_WRONLY);
-	printf("fd:%d\n", fd);
-	sys_write(fd , "hello_world\n", 12);
+	thread_start("k_thread_a",31,k_thread_a,"I am thread_a ");
+	thread_start("k_thread_b",31,k_thread_b,"I am thread_b ");
+	uint32_t fd = sys_open("/file1" , O_RDWR | O_CREAT);
+	printf("open /file1 ,fd:%d\n", fd);
+	
+	sys_write(fd ,"lance is cool!\n",15);
+	//printf("/file1 delete %s\n", sys_unlink("/file1") == 0 ? "done" : "fail");
+
 	sys_close(fd);
 	printf("%d close now\n", fd);
 	while(1);

@@ -22,6 +22,13 @@ enum oflags{
 	O_CREAT = 4						//creat, 100b
 };
 
+//offset of file read and write position
+enum whence{
+	SEEK_SET = 1,
+	SEEK_CUR ,
+	SEEK_END
+};
+
 //record the parent directory
 struct path_search_record{
 	char searched_path[MAX_PATH_LEN];			//parent path
@@ -34,5 +41,8 @@ int32_t path_depth_cnt(char* pathname);
 int32_t sys_open(const char* pathname ,uint8_t flags);
 int32_t sys_close(int32_t fd);
 int32_t sys_write(int32_t fd ,const void* buf , uint32_t count);
+int32_t sys_read(int32_t fd ,void* buf , uint32_t count);
+int32_t sys_lseek(int32_t fd , int32_t offset , uint8_t whence);
+int32_t sys_unlink(const char* pathname);
 
 #endif

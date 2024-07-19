@@ -4,8 +4,10 @@
 #include "super_block.h"
 #include "string.h"
 #include "interrupt.h"
+#include "file.h"
 
 
+extern struct partition* cur_part;
 
 //storage the position of inode
 struct inode_position{
@@ -137,4 +139,77 @@ void inode_init(uint32_t inode_no , struct inode* new_inode){
 		new_inode->i_sectors[index] = 0 ;
 		index++;
 	}
+}
+
+//clear inode in partition (actually , this is unnecessary, the data in disk can cover)
+void inode_delete(struct partition* part , uint32_t inode_no , void* io_buf ){
+	ASSERT(inode_no < 4096);
+
+	struct inode_position inode_pos ;
+	inode_locate(part, inode_no , &inode_pos);
+
+	ASSERT(inode_pos.sec_lba <= (part->start_lba + part->sec_cnt));
+
+	char* inode_buf = (char*)io_buf;
+	if (inode_pos.two_sec){
+		ide_read(part->my_disk , inode_pos.sec_lba ,inode_buf ,2 );
+		memset((inode_buf + inode_pos.off_size) , 0 , sizeof(struct inode));
+		ide_write(part->my_disk , inode_pos.sec_lba , inode_buf , 2);
+	}else{
+		ide_read(part->my_disk , inode_pos.sec_lba ,inode_buf ,1 );
+		memset((inode_buf + inode_pos.off_size) , 0 , sizeof(struct inode));
+		ide_write(part->my_disk , inode_pos.sec_lba , inode_buf , 1);
+	}
+
+}
+
+
+//release the inode's block and itself
+void inode_release(struct partition* part , uint32_t inode_no ){
+	struct inode* inode_to_del = inode_open(part , inode_no);
+	ASSERT(inode_to_del->i_no == inode_no);
+
+	//------------ 1. release all used block ---------------------
+	
+	uint8_t block_idx = 0 , block_cnt = 12;
+	uint32_t block_bitmap_idx;
+	uint32_t all_blocks[140] = {0};
+	//1. first to collect direct block
+	while(block_idx < 12){
+		all_blocks[block_idx] = inode_to_del->i_sectors[block_idx];
+		block_idx++;
+	}
+	//2. second to collect all indirect block and release first level indirect block table's block
+	if (inode_to_del->i_sectors[12] != 0){
+		//collect all indirect block
+		ide_read(part->my_disk , inode_to_del->i_sectors[12] , all_blocks+12 , 1);
+		block_cnt = 140;
+		//release indirect block table's block
+		block_bitmap_idx = inode_to_del->i_sectors[12] - part->sb->data_start_lba;
+		bitmap_set(&part->block_bitmap , block_bitmap_idx , 0);
+		bitmap_sync(cur_part , block_bitmap_idx , BLOCK_BITMAP);
+	}
+	//3. third to release all block (have cllect to "all_blocks")
+	block_idx = 0 ;
+	while (block_idx < block_cnt){
+		if (all_blocks[block_idx] != 0 ){
+			block_bitmap_idx = 0 ;			//use for next ASSERT
+			block_bitmap_idx = all_blocks[block_idx] - part->sb->data_start_lba;
+			ASSERT(block_bitmap_idx > 0);
+			bitmap_set(&part->block_bitmap , block_bitmap_idx , 0);
+			bitmap_sync(cur_part , block_bitmap_idx , BLOCK_BITMAP);
+		}
+		block_idx++;
+	}
+
+	//--------------- 2. release used inode ----------------------
+	bitmap_set(&part->inode_bitmap , inode_no , 0 );
+	bitmap_sync(cur_part , inode_no , INODE_BITMAP);
+
+	/*****/// the inode_delect just used to debug , it is unnecessary 
+	void* io_buf = sys_malloc(1024);
+	inode_delete(part , inode_no , io_buf);
+	sys_free(io_buf);
+	/******/
+	inode_close(inode_to_del);
 }

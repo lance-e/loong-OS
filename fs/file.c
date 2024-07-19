@@ -153,18 +153,18 @@ int32_t file_create(struct dir* parent_dir , char* filename , uint8_t flag){
 		rollback_step = 3;
 		goto rollback;
 	}
-
+	
 	// b. sync file inode
-	memset(io_buf , 0 , 1024);	
-	inode_sync(cur_part, new_file_inode , io_buf);
-	// c. sync parent directory inode
 	memset(io_buf , 0 , 1024);
 	inode_sync(cur_part , parent_dir->inode , io_buf);
+	// c. sync parent directory inode
+	memset(io_buf , 0 , 1024);	
+	inode_sync(cur_part, new_file_inode , io_buf);
 	// d. sync inode bitmap
 	bitmap_sync(cur_part , inode_no , INODE_BITMAP);
 
 	// e. add new open file into open_inode list
-	list_append(&cur_part->open_inode, &new_file_inode->inode_tag);
+	list_push(&cur_part->open_inode, &new_file_inode->inode_tag);
 	new_file_inode->i_open_cnts = 1;
 
 	sys_free(io_buf);
@@ -285,7 +285,7 @@ int32_t file_write(struct file* file , const void* buf , uint32_t count){
 	//the increment
 	uint32_t add_blocks = file_will_used_blocks -  file_has_used_blocks;
 
-	//-------------  collecte all block address into "all_blocks" ---------------
+	//-------------  collect all block address into "all_blocks" ---------------
 
 	if (add_blocks == 0 ){		//no increment
 		if (file_will_used_blocks <= 12){
@@ -409,7 +409,7 @@ int32_t file_write(struct file* file , const void* buf , uint32_t count){
 		}
 
 		//combinate old data and new data
-		memcpy(io_buf + sec_off_bytes , src , chunk_size);
+		memcpy(io_buf + sec_off_bytes , (uint8_t*)src , chunk_size);
 		ide_write(cur_part->my_disk , sec_lba , io_buf , 1);
 		printk("file write at lba 0x%x\n" , sec_lba);
 		src += chunk_size;	//point to next data
@@ -437,3 +437,113 @@ int32_t file_write(struct file* file , const void* buf , uint32_t count){
 
 
 
+//read file
+int32_t file_read(struct file* file , void* buf , uint32_t count){
+	uint8_t* buf_dst = (uint8_t*)buf;
+	uint32_t size = count , size_left = size;
+
+	//if count more than the left size of file , so use the left size as the new targete count
+	if ((file->fd_pos + count ) > file->fd_inode->i_size){
+		size = file->fd_inode->i_size - file->fd_pos;
+		size_left = size;
+		if (size == 0 ){		//file is full
+			return -1;
+		}
+	}
+	
+	uint8_t* io_buf = sys_malloc(512);
+	if (io_buf == NULL){
+		printk("file_read: sys_malloc for io_buf failed\n");
+		return -1;
+	}
+
+	//used for record all block address of file
+	uint32_t* all_blocks = (uint32_t*)sys_malloc(BLOCK_SIZE + 48);
+	if (all_blocks == NULL){
+		printk("file_read: sys_malloc for all_blocks failed\n");
+		return -1;
+	} 
+
+	uint32_t block_read_start_idx = file->fd_pos / BLOCK_SIZE;
+	uint32_t block_read_end_idx = (file->fd_pos + size) / BLOCK_SIZE;
+	uint32_t read_block = block_read_end_idx - block_read_start_idx;
+	
+	ASSERT(block_read_start_idx < 139 && block_read_end_idx < 139);
+
+	int32_t indirect_block_table;		//first level indirect block table address
+	uint32_t block_idx;			//block index
+	
+	//-------------  collect all block address into "all_blocks" ---------------
+	
+	if (read_block == 0 ){
+		ASSERT(block_read_start_idx == block_read_end_idx);
+		if (block_read_end_idx < 12){
+			block_idx = block_read_start_idx;
+			all_blocks[block_idx] = file->fd_inode->i_sectors[block_idx];
+		}else{		//need to read all indirect block 
+			indirect_block_table = file->fd_inode->i_sectors[12];
+			ide_read(cur_part->my_disk , indirect_block_table , all_blocks+12 , 1);
+		}
+	}else {
+		if (block_read_end_idx < 12){
+			block_idx = block_read_start_idx;
+			while(block_idx <= block_read_end_idx){
+				all_blocks[block_idx] = file->fd_inode->i_sectors[block_idx];
+				block_idx++;
+			}
+		}else if (block_read_start_idx < 12 && block_read_end_idx > 12){
+			block_idx = block_read_start_idx;
+			while(block_idx <= 12 ){
+				all_blocks[block_idx] = file->fd_inode->i_sectors[block_idx];
+				block_idx++;
+			}
+			ASSERT(file->fd_inode->i_sectors[12] != 0);
+			//read all indirect block
+			indirect_block_table = file->fd_inode->i_sectors[12];
+			ide_read(cur_part->my_disk , indirect_block_table , all_blocks+12 , 1);
+		}else {
+			ASSERT(file->fd_inode->i_sectors[12] != 0);
+			//read all indirect block
+			indirect_block_table = file->fd_inode->i_sectors[12];
+			ide_read(cur_part->my_disk , indirect_block_table , all_blocks+12 , 1);
+
+		}
+
+	}
+
+	//------------------------- begin read data --------------------------------
+	uint32_t sec_idx ;			//sector index	
+	uint32_t sec_lba ;			//sector address
+	uint32_t sec_off_bytes;			//sector byte offset
+	uint32_t sec_left_bytes;		//sector left byte
+	uint32_t chunk_size;			//the size of data per write 
+	uint32_t bytes_read  = 0 ;		//record the read data size
+
+	while (bytes_read < count){
+
+		memset(io_buf , 0 , BLOCK_SIZE);
+
+		sec_idx = file->fd_pos / BLOCK_SIZE;		//different from write ,here use fd_pos
+		sec_lba = all_blocks[sec_idx];
+		sec_off_bytes = file->fd_pos  % BLOCK_SIZE;
+		sec_left_bytes = BLOCK_SIZE - sec_off_bytes;
+
+		//judge the size of data in this writing
+		chunk_size = size_left > sec_left_bytes ? sec_left_bytes : size_left; 
+		
+		ide_read(cur_part->my_disk , sec_lba , io_buf , 1);
+
+		//combinate old data and new data
+		memcpy(buf_dst , io_buf + sec_off_bytes , chunk_size);
+	
+		buf_dst  += chunk_size;	//point to next data
+		file->fd_pos += chunk_size;
+		bytes_read += chunk_size;
+		size_left -= chunk_size;
+	}
+	
+	
+	sys_free(all_blocks);
+	sys_free(io_buf);
+	return bytes_read;	
+}
