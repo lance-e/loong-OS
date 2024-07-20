@@ -213,3 +213,5 @@ void inode_release(struct partition* part , uint32_t inode_no ){
 	/******/
 	inode_close(inode_to_del);
 }
+
+

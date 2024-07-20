@@ -93,6 +93,8 @@ struct task_struct {
 	struct virtual_addr userprog_vaddr;	// virtual address pool of user process 
 						
 	struct mem_block_desc u_block_desc[DESC_CNT]; //memory block descriptor of user process
+						      
+	uint32_t cwd_inode_nr;			//current working directory where process are
 
 	uint32_t stack_magic;			//edge of stack
 };

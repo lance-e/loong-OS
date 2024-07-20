@@ -29,6 +29,13 @@ enum whence{
 	SEEK_END
 };
 
+//attribute of file
+struct stat{
+	uint32_t st_ino;					//inode number
+	uint32_t st_size;					//size
+	enum file_types st_filetype;				//file type
+};
+
 //record the parent directory
 struct path_search_record{
 	char searched_path[MAX_PATH_LEN];			//parent path
@@ -49,6 +56,11 @@ struct dir* sys_opendir(const char* name);
 int32_t sys_closedir(struct dir* dir);
 struct dir_entry* sys_readdir(struct dir* dir);
 void sys_rewinddir(struct dir* dir);
+int32_t sys_rmdir(const char* pathname);
+char* sys_getcwd(char* buf , uint32_t size);
+int32_t sys_chdir(const char* path);
+int32_t sys_stat(const char* path , struct stat* buf);
+
 
 
 #endif

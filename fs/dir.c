@@ -368,3 +368,31 @@ struct dir_entry* dir_read(struct dir* dir){
 	}
 	return NULL;
 }
+
+//judge the directory is it empty
+bool dir_is_empty(struct dir* dir){
+	struct inode* dir_inode = dir->inode;
+	return (dir_inode->i_size == 2 * cur_part->sb->dir_entry_size);
+}
+
+
+//remove directory from parent directory
+int32_t dir_remove(struct dir* parent_dir , struct dir* child_dir){
+	struct inode* child_dir_inode = child_dir->inode;	
+	uint32_t block_idx =  1;
+	while (block_idx < 13){ 	//only have a block at sector[0] , other must 0 
+		ASSERT(child_dir->inode->i_sectors[block_idx] == 0);
+		block_idx++;
+	}
+	void* io_buf = sys_malloc(SECTOR_SIZE * 2);
+	if (io_buf == NULL){
+		printk("dir_remove: sys_malloc for io_buf failed\n");
+		return -1;
+	}
+	//delete directory entry
+	delete_dir_entry(cur_part , parent_dir , child_dir_inode->i_no , io_buf);
+	//release inode
+	inode_release(cur_part , child_dir_inode->i_no);
+	sys_free(io_buf);
+	return 0;
+}

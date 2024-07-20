@@ -99,7 +99,8 @@ void init_thread(struct task_struct* pthread,char* name,int prio){
 		pthread->fd_table[fd_index] = -1;
 		fd_index++;
 	}
-	pthread->stack_magic = 0x88888888;			//magic number
+	pthread->cwd_inode_nr = 0;
+	pthread->stack_magic = 0x12345678;			//magic number
 }
 
 //create a thread: priority is 'prio',name is 'name',target function is 'function(func_arg)'

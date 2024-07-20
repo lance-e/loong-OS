@@ -36,7 +36,7 @@ static void frequency_set(uint8_t counter_port, uint8_t counter_no, uint8_t rwl,
 //timer interrupt handler
 static void intr_timer_handler(void){
 	struct task_struct* cur_thread = running_thread();
-	ASSERT(cur_thread->stack_magic == 0x88888888);
+	ASSERT(cur_thread->stack_magic == 0x12345678);
 	++cur_thread->elapsed_ticks;		//record time of current thread  had run in cpu
 	++ticks;				//from first time interrupt to now 
 						
