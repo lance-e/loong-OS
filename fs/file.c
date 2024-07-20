@@ -411,7 +411,7 @@ int32_t file_write(struct file* file , const void* buf , uint32_t count){
 		//combinate old data and new data
 		memcpy(io_buf + sec_off_bytes , (uint8_t*)src , chunk_size);
 		ide_write(cur_part->my_disk , sec_lba , io_buf , 1);
-		printk("file write at lba 0x%x\n" , sec_lba);
+		//printk("file write at lba 0x%x\n" , sec_lba);
 		src += chunk_size;	//point to next data
 		file->fd_inode->i_size += chunk_size; 	//update the size of file
 		file->fd_pos += chunk_size;
@@ -519,7 +519,7 @@ int32_t file_read(struct file* file , void* buf , uint32_t count){
 	uint32_t chunk_size;			//the size of data per write 
 	uint32_t bytes_read  = 0 ;		//record the read data size
 
-	while (bytes_read < count){
+	while (bytes_read < size){
 
 		memset(io_buf , 0 , BLOCK_SIZE);
 
