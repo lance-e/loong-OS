@@ -23,7 +23,8 @@ OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o $(BUILD_
 $(BUILD_DIR)/main.o : kernel/main.c lib/kernel/print.h	\
 	lib/stdint.h  kernel/init.h kernel/memory.h  thread/thread.h	\
 	kernel/interrupt.h device/console.h device/ioqueue.h 	\
-	device/keyboard.h userprog/process.h fs/fs.h lib/string.h
+	device/keyboard.h userprog/process.h fs/fs.h lib/string.h	\
+	fs/dir.h
 	$(CC) $(CFLAGS)  $< -o $@
 
 $(BUILD_DIR)/init.o : kernel/init.c kernel/init.h lib/kernel/print.h \

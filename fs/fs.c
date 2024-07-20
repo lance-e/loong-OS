@@ -716,3 +716,15 @@ int32_t sys_closedir(struct dir* dir){
 	}
 	return ret;
 }
+
+//read a directory entry at direcotry
+struct dir_entry* sys_readdir(struct dir* dir){
+	ASSERT(dir != NULL);
+	return dir_read(dir);
+}
+
+
+//set directory's pointer "dir_pos" to 0
+void sys_rewinddir(struct dir* dir){
+	dir->dir_pos = 0 ;
+}
