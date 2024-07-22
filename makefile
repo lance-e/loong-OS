@@ -3,7 +3,8 @@ ENTRY_POINT = 0xc0001500
 AS = nasm 
 CC = gcc
 LD = ld
-LIB = -I lib/ -I lib/kernel/ -I lib/user/ -I kernel/ -I device/ -I thread/ -I userprog/ -I fs/
+LIB = -I lib/ -I lib/kernel/ -I lib/user/ -I kernel/ -I device/ -I thread/ -I userprog/ -I fs/	\
+      -I shell/
 ASFLAGS = -f elf
 CFLAGS = -m32 -Wall $(LIB) -c -fno-builtin -W -Wstrict-prototypes -Wmissing-prototypes
 LDFLAGS = -m elf_i386 -Ttext $(ENTRY_POINT) -e main 
@@ -14,7 +15,7 @@ OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o $(BUILD_
 	$(BUILD_DIR)/ioqueue.o $(BUILD_DIR)/tss.o $(BUILD_DIR)/process.o $(BUILD_DIR)/syscall.o	\
 	$(BUILD_DIR)/syscall-init.o $(BUILD_DIR)/stdio.o $(BUILD_DIR)/stdio-kernel.o		\
 	$(BUILD_DIR)/ide.o $(BUILD_DIR)/fs.o $(BUILD_DIR)/file.o $(BUILD_DIR)/inode.o		\
-	$(BUILD_DIR)/dir.o $(BUILD_DIR)/fork.o
+	$(BUILD_DIR)/dir.o $(BUILD_DIR)/fork.o $(BUILD_DIR)/shell.o
 
 
 
@@ -24,7 +25,7 @@ $(BUILD_DIR)/main.o : kernel/main.c lib/kernel/print.h	\
 	lib/stdint.h  kernel/init.h kernel/memory.h  thread/thread.h	\
 	kernel/interrupt.h device/console.h device/ioqueue.h 	\
 	device/keyboard.h userprog/process.h fs/fs.h lib/string.h	\
-	fs/dir.h
+	fs/dir.h shell/shell.h kernel/debug.h
 	$(CC) $(CFLAGS)  $< -o $@
 
 $(BUILD_DIR)/init.o : kernel/init.c kernel/init.h lib/kernel/print.h \
@@ -153,6 +154,10 @@ $(BUILD_DIR)/fork.o: userprog/fork.c userprog/fork.h lib/stdint.h	\
 	kernel/interrupt.h kernel/debug.h fs/file.h
 	$(CC) $(CFLAGS) $< -o $@
 
+$(BUILD_DIR)/shell.o: shell/shell.c shell/shell.h lib/stdint.h 		\
+	lib/stdio.h kernel/debug.h lib/user/syscall.h lib/string.h	\
+	fs/file.h
+	$(CC) $(CFLAGS) $< -o $@
 
 
 

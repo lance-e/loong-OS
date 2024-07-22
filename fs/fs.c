@@ -497,7 +497,7 @@ int32_t sys_read(int32_t fd ,void* buf , uint32_t count){
 			bytes_read++;
 			buffer++;
 		}
-		ret = ((bytes_read == 0 )? 0 : (int32_t)bytes_read);
+		ret = (bytes_read == 0 ? -1 : (int32_t)bytes_read);
 
 	}else {
 		uint32_t global_fd = fd_local2global(fd);

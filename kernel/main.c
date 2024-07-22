@@ -13,13 +13,15 @@
 #include "memory.h"
 #include "fs.h"
 #include "dir.h"
+#include "shell.h"
+#include "debug.h"
 
 int main(void){
 	put_str("kernel starting!\n");
 	init_all();
 	intr_enable();
-
-
+	cls_screen();
+	console_put_str("[lance@localhost /]$ ");
 	while(1);
 	return 0;
 }
@@ -27,9 +29,9 @@ int main(void){
 void init(void){
 	uint32_t ret_pid = fork();
 	if (ret_pid){
-		printf("I am father , my pid :%d , child pid :%d\n" , getpid() ,ret_pid);
+		while(1);
 	}else{
-		printf("I am child , my pid :%d , ret pid :%d \n" , getpid(), ret_pid);
+		my_shell();
 	}
-	while(1);
+	PANIC("init: should not be here");
 }
