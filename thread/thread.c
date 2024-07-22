@@ -21,9 +21,10 @@ struct lock pid_lock;
 
 
 extern void switch_to(struct task_struct* cur,struct task_struct* next);
+extern void init(void);
 
 //the thread run when os are free
-static void idle(void* arg ){
+static void idle(void* arg UNUSED ){
 	while(1){
 		thread_block(TASK_BLOCKED);
 		asm volatile("sti ; hlt" : : : "memory");
@@ -49,6 +50,9 @@ static pid_t allocate_pid(void){
 	return next_pid;
 }
 
+pid_t fork_pid(void){
+	return allocate_pid();
+}
 
 
 //kernel_thread is to execute function(func_arg)
@@ -100,6 +104,8 @@ void init_thread(struct task_struct* pthread,char* name,int prio){
 		fd_index++;
 	}
 	pthread->cwd_inode_nr = 0;
+	pthread->parent_pid = -1;				//-1 mean no parent process
+								
 	pthread->stack_magic = 0x12345678;			//magic number
 }
 
@@ -220,6 +226,8 @@ void thread_init(void){
 	list_init(&thread_ready_list);
 	list_init(&thread_all_list);
 	lock_init(&pid_lock);
+	//create first user process : init
+	process_execute(init , "init");
 	//make current thread into main thread
 	make_main_thread();
 	//create idle thread

@@ -96,6 +96,8 @@ struct task_struct {
 						      
 	uint32_t cwd_inode_nr;			//current working directory where process are
 
+	pid_t parent_pid;			//pid of parent process
+
 	uint32_t stack_magic;			//edge of stack
 };
 
@@ -109,5 +111,6 @@ void schedule(void);
 void thread_yield(void);
 void thread_block(enum task_status stat);
 void thread_unblock(struct task_struct* pthread);
+pid_t fork_pid(void);
 
 #endif

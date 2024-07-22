@@ -227,6 +227,28 @@ void* get_a_page(enum pool_flags pf, uint32_t vaddr){
 	return (void*)vaddr;
 }
 
+
+//use for fork:
+//make a map of 'vaddr' and physic address in 'pf' pool ,just can map only a page
+// (it is like malloc_page , but don't need apply virtual address again and set virtual adress bitmap);
+void* get_a_page_without_opvaddrbitmap(enum pool_flags pf, uint32_t vaddr){
+	struct pool* mem_pool = (pf & PF_KERNEL)? &kernel_pool : &user_pool;
+	lock_acquire(&mem_pool->lock);
+
+	// apply for physic address
+	void* page_phyaddr = palloc(mem_pool);
+	if (page_phyaddr == NULL){
+		lock_release(&mem_pool->lock);
+		return NULL;
+	}
+	// make map
+	page_table_add((void*)vaddr,page_phyaddr);
+	lock_release(&mem_pool->lock);
+	return (void*)vaddr;
+}
+
+
+
 //get the physic address of 'vaddr'
 uint32_t addr_v2p (uint32_t vaddr){
 	uint32_t* pte = pte_ptr(vaddr);
