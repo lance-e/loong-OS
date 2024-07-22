@@ -10,6 +10,7 @@
 #include "file.h"
 #include "thread.h"
 #include "console.h"
+#include "ioqueue.h"
 
 
 					
@@ -18,6 +19,7 @@ extern struct list partition_list;
 extern struct ide_channel channels[2];
 extern struct file file_table[MAX_FILE_OPEN];
 extern struct dir root_dir;
+extern struct ioqueue kbd_buf;
 
 
 struct partition* cur_part;		//default operation partition 
@@ -482,14 +484,26 @@ int32_t sys_write(int32_t fd ,const void* buf , uint32_t count){
 
 //read "count" of data from file into "buf"
 int32_t sys_read(int32_t fd ,void* buf , uint32_t count){
-	if (fd < 0){
-		printk("sys_read: fd error\n");
-		return -1;
-	}
 	ASSERT(buf != NULL);
-	uint32_t global_fd = fd_local2global(fd);
-	return file_read(&file_table[global_fd] , buf , count);
+	int32_t ret = -1;
+	if (fd < 0 || fd == stdout_no || fd == stderr_no){
+		printk("sys_read: fd error\n");
+		return ret;
+	}else if (fd == stdin_no){
+		char* buffer = buf;
+		uint32_t bytes_read = 0 ;
+		while(bytes_read < count){
+			*buffer = ioq_getchar(&kbd_buf);
+			bytes_read++;
+			buffer++;
+		}
+		ret = ((bytes_read == 0 )? 0 : (int32_t)bytes_read);
 
+	}else {
+		uint32_t global_fd = fd_local2global(fd);
+		ret = file_read(&file_table[global_fd] , buf , count);
+	}
+	return ret;
 }
 
 //reset the offset pointer for file read and write operate

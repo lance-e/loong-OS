@@ -3,6 +3,7 @@
 #include "stdint.h"
 uint32_t sys_getpid(void);
 void syscall_init(void);
+void sys_putchar(char char_ascii);
 
 
 #endif 

@@ -108,7 +108,7 @@ $(BUILD_DIR)/syscall.o : lib/user/syscall.c lib/user/syscall.h 	\
 $(BUILD_DIR)/syscall-init.o : userprog/syscall-init.c		\
 	userprog/syscall-init.h thread/thread.h lib/kernel/print.h	\
 	lib/stdint.h lib/user/syscall.h lib/string.h		\
-	fs/fs.h userprog/fork.h
+	fs/fs.h userprog/fork.h device/console.h
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/stdio.o : lib/stdio.c lib/stdio.h  lib/user/syscall.h	\
@@ -127,7 +127,8 @@ $(BUILD_DIR)/ide.o: device/ide.c device/ide.h lib/stdint.h lib/kernel/list.h	\
 
 $(BUILD_DIR)/fs.o: fs/fs.c fs/fs.h kernel/global.h fs/super_block.h fs/dir.h 	\
 	lib/kernel/stdio-kernel.h kernel/memory.h kernel/debug.h device/ide.h	\
-	lib/stdint.h lib/string.h fs/file.h thread/thread.h device/console.h
+	lib/stdint.h lib/string.h fs/file.h thread/thread.h device/console.h	\
+	device/ioqueue.h
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/file.o: fs/file.c fs/file.h lib/stdint.h device/ide.h fs/fs.h 		\
