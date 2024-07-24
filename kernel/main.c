@@ -16,6 +16,8 @@
 #include "shell.h"
 #include "debug.h"
 
+void init(void);
+
 int main(void){
 	put_str("kernel starting!\n");
 	init_all();

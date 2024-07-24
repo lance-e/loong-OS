@@ -11,6 +11,7 @@
 #include "thread.h"
 #include "console.h"
 #include "ioqueue.h"
+#include "keyboard.h"
 
 
 					
@@ -19,7 +20,6 @@ extern struct list partition_list;
 extern struct ide_channel channels[2];
 extern struct file file_table[MAX_FILE_OPEN];
 extern struct dir root_dir;
-extern struct ioqueue kbd_buf;
 
 
 struct partition* cur_part;		//default operation partition 
@@ -505,6 +505,8 @@ int32_t sys_read(int32_t fd ,void* buf , uint32_t count){
 	}
 	return ret;
 }
+
+
 
 //reset the offset pointer for file read and write operate
 int32_t sys_lseek(int32_t fd , int32_t offset , uint8_t whence){

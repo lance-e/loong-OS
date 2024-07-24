@@ -8,7 +8,9 @@
 #include "keyboard.h"
 #include "syscall-init.h"
 #include "ide.h"
-//#include "fs.h"
+#include "fs.h"
+#include "tss.h"
+
 
 //initial all module
 void init_all(){

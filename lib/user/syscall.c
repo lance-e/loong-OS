@@ -47,11 +47,11 @@ uint32_t write(int32_t fd , const void* buf , uint32_t count){
 }
 
 void* malloc(uint32_t size){
-	return _syscall1(SYS_MALLOC,size);
+	return (void*)_syscall1(SYS_MALLOC,size);
 }
 
 void free(void* ptr){
-	return _syscall1(SYS_FREE,ptr);
+	_syscall1(SYS_FREE,ptr);
 }
 
 pid_t fork(){
@@ -63,10 +63,10 @@ int32_t read(int32_t fd , void* buf , uint32_t count){
 }
 
 void putchar(char char_ascii){
-	return _syscall1(SYS_PUTCHAR , char_ascii);
+	_syscall1(SYS_PUTCHAR , char_ascii);
 }
 
 void clear(void){
-	return _syscall0(SYS_CLEAR);
+	_syscall0(SYS_CLEAR);
 }
 	

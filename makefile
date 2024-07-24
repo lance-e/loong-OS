@@ -25,13 +25,13 @@ $(BUILD_DIR)/main.o : kernel/main.c lib/kernel/print.h	\
 	lib/stdint.h  kernel/init.h kernel/memory.h  thread/thread.h	\
 	kernel/interrupt.h device/console.h device/ioqueue.h 	\
 	device/keyboard.h userprog/process.h fs/fs.h lib/string.h	\
-	fs/dir.h shell/shell.h kernel/debug.h
+	fs/dir.h shell/shell.h kernel/debug.h lib/kernel/stdio-kernel.h	
 	$(CC) $(CFLAGS)  $< -o $@
 
 $(BUILD_DIR)/init.o : kernel/init.c kernel/init.h lib/kernel/print.h \
 	lib/stdint.h kernel/interrupt.h device/timer.h thread/thread.h	\
 	device/console.h device/keyboard.h userprog/tss.h 	\
-	userprog/syscall-init.h device/ide.h fs/fs.h
+	userprog/syscall-init.h device/ide.h fs/fs.h userprog/tss.h
 	$(CC) $(CFLAGS) $<  -o $@
 
 $(BUILD_DIR)/interrupt.o : kernel/interrupt.c kernel/interrupt.h	\
@@ -129,13 +129,13 @@ $(BUILD_DIR)/ide.o: device/ide.c device/ide.h lib/stdint.h lib/kernel/list.h	\
 $(BUILD_DIR)/fs.o: fs/fs.c fs/fs.h kernel/global.h fs/super_block.h fs/dir.h 	\
 	lib/kernel/stdio-kernel.h kernel/memory.h kernel/debug.h device/ide.h	\
 	lib/stdint.h lib/string.h fs/file.h thread/thread.h device/console.h	\
-	device/ioqueue.h
+	device/ioqueue.h device/keyboard.h
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/file.o: fs/file.c fs/file.h lib/stdint.h device/ide.h fs/fs.h 		\
 	lib/kernel/stdio-kernel.h thread/thread.h lib/kernel/bitmap.h fs/super_block.h	\
 	fs/dir.h kernel/memory.h fs/inode.h lib/string.h fs/dir.h kernel/interrupt.h	\
-	kernel/global.h kernel/debug.h
+	kernel/global.h kernel/debug.h device/ioqueue.h device/keyboard.h
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/dir.o: fs/dir.c fs/dir.h lib/stdint.h fs/inode.h fs/fs.h kernel/global.h	\
