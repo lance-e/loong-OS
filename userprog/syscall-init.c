@@ -6,6 +6,7 @@
 #include "fs.h"
 #include "fork.h"
 #include "console.h"
+#include "exec.h"
 
 
 #define syscall_nr 32
@@ -46,6 +47,7 @@ void syscall_init(void){
 	syscall_table[SYS_STAT] = sys_stat;
 	syscall_table[SYS_CHDIR] = sys_chdir;
 	syscall_table[SYS_PS] = sys_ps;
+	syscall_table[SYS_EXECV] = sys_execv;
 
 	put_str("syscall_init done\n");
 }

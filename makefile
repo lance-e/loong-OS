@@ -15,7 +15,8 @@ OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o $(BUILD_
 	$(BUILD_DIR)/ioqueue.o $(BUILD_DIR)/tss.o $(BUILD_DIR)/process.o $(BUILD_DIR)/syscall.o	\
 	$(BUILD_DIR)/syscall-init.o $(BUILD_DIR)/stdio.o $(BUILD_DIR)/stdio-kernel.o		\
 	$(BUILD_DIR)/ide.o $(BUILD_DIR)/fs.o $(BUILD_DIR)/file.o $(BUILD_DIR)/inode.o		\
-	$(BUILD_DIR)/dir.o $(BUILD_DIR)/fork.o $(BUILD_DIR)/shell.o $(BUILD_DIR)/buildin_cmd.o
+	$(BUILD_DIR)/dir.o $(BUILD_DIR)/fork.o $(BUILD_DIR)/shell.o $(BUILD_DIR)/buildin_cmd.o	\
+	$(BUILD_DIR)/exec.o $(BUILD_DIR)/assert.o
 
 
 
@@ -25,7 +26,8 @@ $(BUILD_DIR)/main.o : kernel/main.c lib/kernel/print.h	\
 	lib/stdint.h  kernel/init.h kernel/memory.h  thread/thread.h	\
 	kernel/interrupt.h device/console.h device/ioqueue.h 	\
 	device/keyboard.h userprog/process.h fs/fs.h lib/string.h	\
-	fs/dir.h shell/shell.h kernel/debug.h lib/kernel/stdio-kernel.h	
+	fs/dir.h shell/shell.h kernel/debug.h lib/kernel/stdio-kernel.h	\
+	device/ide.h
 	$(CC) $(CFLAGS)  $< -o $@
 
 $(BUILD_DIR)/init.o : kernel/init.c kernel/init.h lib/kernel/print.h \
@@ -110,7 +112,7 @@ $(BUILD_DIR)/syscall.o : lib/user/syscall.c lib/user/syscall.h 	\
 $(BUILD_DIR)/syscall-init.o : userprog/syscall-init.c		\
 	userprog/syscall-init.h thread/thread.h lib/kernel/print.h	\
 	lib/stdint.h lib/user/syscall.h lib/string.h		\
-	fs/fs.h userprog/fork.h device/console.h
+	fs/fs.h userprog/fork.h device/console.h userprog/exec.h
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/stdio.o : lib/stdio.c lib/stdio.h  lib/user/syscall.h	\
@@ -156,13 +158,21 @@ $(BUILD_DIR)/fork.o: userprog/fork.c userprog/fork.h lib/stdint.h	\
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/shell.o: shell/shell.c shell/shell.h lib/stdint.h 		\
-	lib/stdio.h kernel/debug.h lib/user/syscall.h lib/string.h	\
+	lib/stdio.h lib/user/assert.h lib/user/syscall.h lib/string.h	\
 	fs/file.h fs/fs.h shell/buildin_cmd.h
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/buildin_cmd.o: shell/buildin_cmd.c shell/buildin_cmd.h 	\
-	lib/stdint.h lib/string.h fs/fs.h fs/dir.h kernel/debug.h	\
+	lib/stdint.h lib/string.h fs/fs.h fs/dir.h lib/user/assert.h	\
 	lib/user/syscall.h kernel/global.h lib/stdio.h
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD_DIR)/exec.o: userprog/exec.c userprog/exec.h lib/stdint.h 	\
+	kernel/memory.h kernel/interrupt.h fs/fs.h lib/string.h		\
+	thread/thread.h
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD_DIR)/assert.o : lib/user/assert.c lib/user/assert.h lib/stdio.h	
 	$(CC) $(CFLAGS) $< -o $@
 
 

@@ -6,9 +6,11 @@
 
 
 #define MAX_FILES_OPEN_PER_PROC 8			// the max number of open file in per process
+#define TASK_NAME_LEN 16
 
 typedef int16_t pid_t;
 typedef void thread_func(void*);
+
 
 
 //status of process or thread

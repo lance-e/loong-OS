@@ -2,7 +2,7 @@
 #include "fs.h"
 #include "string.h"
 #include "dir.h"
-#include "debug.h"
+#include "assert.h"
 #include "syscall.h"
 #include "shell.h"
 #include "global.h"
@@ -14,7 +14,7 @@ extern char final_path[MAX_PATH_LEN] ;
 
 
 static void wash_path(char* old_abs_path , char* new_abs_path){
-	ASSERT(old_abs_path[0] =='/');
+	assert(old_abs_path[0] =='/');
 	char name[MAX_FILE_NAME_LEN] = {0};
 	char* sub_path = old_abs_path;
 	sub_path = path_parse(old_abs_path , name);

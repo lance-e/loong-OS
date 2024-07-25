@@ -1,6 +1,6 @@
 #include "shell.h"
 #include "stdio.h"
-#include "debug.h"
+#include "assert.h"
 #include "syscall.h"
 #include "string.h"
 #include "file.h"
@@ -29,7 +29,7 @@ void print_prompt(void){				//print prompt
 
 //read count byte from keyboard buffer into "buf"
 static  void readline(char* buf , int32_t count){
-	ASSERT(buf != NULL && count > 0 );
+	assert(buf != NULL && count > 0 );
 	char* pos = buf;
 	while (read(stdin_no , pos , 1) != -1 && (pos - buf )< count ){
 		switch(*pos){
@@ -68,7 +68,7 @@ static  void readline(char* buf , int32_t count){
 
 //parse command "cmd_str" take "token" as a interval , and storage into "argv"
 static int32_t cmd_parse(char* cmd_str , char** argv ,char token){
-	ASSERT(cmd_str != NULL);	
+	assert(cmd_str != NULL);	
 	int32_t arg_idx = 0 ;
 	while(arg_idx < MAX_ARG_NR){
 		argv[arg_idx] = NULL;
@@ -143,11 +143,30 @@ void my_shell(void){
 			buildin_rmdir(argc , argv);
 		}else if (!strcmp("rm" , argv[0])){
 			buildin_rm(argc , argv);
-		}else {
-			printf("external command\n");
+		}else { 	
+			int32_t pid = fork();
+			if (pid){	//parent process
+				while(1);
+			}else {		//child process
+				make_clear_abs_path(argv[0] , final_path);
+				argv[0] = final_path;
+				struct stat file_stat;
+				memset(&file_stat  , 0 , sizeof(struct stat));
+				if (stat(argv[0] , &file_stat) == -1){
+					printf("my_shell: cannot access %s: No such file or directory\n" , argv[0]);
+				}else {
+					execv(argv[0] , argv);
+				}
+				while(1);
+			}
+		}
+		int32_t arg_idx = 0 ;
+		while(arg_idx < MAX_ARG_NR){
+			argv[arg_idx] = NULL;
+			arg_idx++;
 		}
 	}
-	PANIC("my_shell: should not be here");
+	panic("my_shell: should not be here");
 }
 
 
