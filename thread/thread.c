@@ -9,6 +9,9 @@
 #include "list.h"
 #include "process.h"
 #include "sync.h"
+#include "stdio.h"
+#include "fs.h"
+#include "file.h"
 
 #define PG_SIZE 4096
 
@@ -217,6 +220,78 @@ void thread_unblock(struct task_struct* pthread){
 		pthread->status = TASK_READY;
 	}
 	intr_set_status(old_status);
+}
+
+
+//print buffer filled with space
+static void pad_print(char* buf, int32_t buf_len , void* ptr , char format){
+	memset(buf , 0 , buf_len);
+	uint8_t out_pad_0idx = 0 ;
+	switch(format){
+		case 's':
+			out_pad_0idx = sprintf(buf , "%s" , ptr);
+			break;
+		case 'd':
+			out_pad_0idx = sprintf(buf , "%d" , *((int16_t*)ptr));
+			break;
+		case 'x':
+			out_pad_0idx = sprintf(buf , "%x" , *((uint32_t*)ptr));
+	}
+	while(out_pad_0idx < buf_len){
+		buf[out_pad_0idx] = ' ';
+		out_pad_0idx++;
+	}
+	sys_write(stdout_no , buf , buf_len -1);
+}
+
+//(used in list_traversal) 
+static bool elem2thread_info(struct list_elem* pelem , int arg UNUSED){
+	struct task_struct* pthread = elem2entry(struct task_struct , all_list_tag , pelem);
+	char out_pad[16] = {0};
+
+	pad_print(out_pad , 16 , &pthread->pid , 'd');
+
+	if (pthread->parent_pid == -1){
+		pad_print(out_pad , 16 , "NULL" , 's');
+	}else {
+		pad_print(out_pad , 16 , &pthread->parent_pid , 'd');
+	}
+
+	switch (pthread->status){
+		case 0:
+			pad_print(out_pad ,  16, "RUNNING" , 's');
+			break;
+		case 1:
+			pad_print(out_pad , 16 , "READY" , 's');
+			break;
+		case 2:
+			pad_print(out_pad , 16 , "BLOCKED" ,'s');
+			break;
+		case 3:
+			pad_print(out_pad , 16 , "WAITING" , 's');
+			break;
+		case 4:
+			pad_print(out_pad , 16 , "HANGING" , 's');
+			break;
+		case 5:
+			pad_print(out_pad , 16 , "DIED" , 's');
+	}
+	pad_print(out_pad ,  16 , &pthread->elapsed_ticks , 'x');
+
+	memset(out_pad , 0 , 16);
+	ASSERT(strlen(pthread->name) < 17);
+	memcpy(out_pad , pthread->name , strlen(pthread->name));
+	strcat(out_pad , "\n");
+	sys_write(stdout_no , out_pad , strlen(out_pad));
+	return false;
+}
+
+
+//print task list
+void sys_ps(void){
+	char* ps_title = "PID             PPID            STAT            TICKS            COMMAND\n";
+	sys_write(stdout_no , ps_title , strlen(ps_title));
+	list_traversal(&thread_all_list , elem2thread_info , 0);
 }
 
 

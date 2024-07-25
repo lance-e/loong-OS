@@ -175,6 +175,11 @@ static void intr_keyboard_handler(void){
 
 		char cur_char = keymap[index][shift];
 
+		//handle ctrl+l and ctrl+u
+		if ((ctrl_down_last && cur_char == 'l')|| (ctrl_down_last && cur_char == 'u' )){
+			cur_char -= 'a';
+		}
+
 		if (cur_char){
 			if (!ioq_full(&kbd_buf)){
 				//put_char(cur_char);

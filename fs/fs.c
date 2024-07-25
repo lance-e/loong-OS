@@ -284,7 +284,7 @@ void filesys_init(void){
 
 //parse the path :
 //eg: "///a/b" , name_store : a , return pathname: /b. 
-static char* path_parse(char* pathname , char* name_store){
+char* path_parse(char* pathname , char* name_store){
 	if (pathname[0] == '/' ){
 		while(*(++pathname) == '/');		//skip lisk this: "////a/b"
 	}

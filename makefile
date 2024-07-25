@@ -15,7 +15,7 @@ OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o $(BUILD_
 	$(BUILD_DIR)/ioqueue.o $(BUILD_DIR)/tss.o $(BUILD_DIR)/process.o $(BUILD_DIR)/syscall.o	\
 	$(BUILD_DIR)/syscall-init.o $(BUILD_DIR)/stdio.o $(BUILD_DIR)/stdio-kernel.o		\
 	$(BUILD_DIR)/ide.o $(BUILD_DIR)/fs.o $(BUILD_DIR)/file.o $(BUILD_DIR)/inode.o		\
-	$(BUILD_DIR)/dir.o $(BUILD_DIR)/fork.o $(BUILD_DIR)/shell.o
+	$(BUILD_DIR)/dir.o $(BUILD_DIR)/fork.o $(BUILD_DIR)/shell.o $(BUILD_DIR)/buildin_cmd.o
 
 
 
@@ -66,7 +66,8 @@ $(BUILD_DIR)/thread.o : thread/thread.c thread/thread.h 	\
 	lib/stdint.h lib/string.h kernel/global.h 	\
 	kernel/memory.h lib/kernel/list.h kernel/interrupt.h	\
 	kernel/debug.h lib/kernel/print.h lib/kernel/list.h	\
-	kernel/memory.h  userprog/process.h thread/sync.h
+	kernel/memory.h  userprog/process.h thread/sync.h	\
+	lib/stdio.h fs/fs.h fs/file.h
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/list.o : lib/kernel/list.c lib/kernel/list.h	\
@@ -103,7 +104,7 @@ $(BUILD_DIR)/process.o : userprog/process.c userprog/process.h	\
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/syscall.o : lib/user/syscall.c lib/user/syscall.h 	\
-	lib/stdint.h thread/thread.h
+	lib/stdint.h thread/thread.h fs/dir.h fs/fs.h
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/syscall-init.o : userprog/syscall-init.c		\
@@ -156,7 +157,12 @@ $(BUILD_DIR)/fork.o: userprog/fork.c userprog/fork.h lib/stdint.h	\
 
 $(BUILD_DIR)/shell.o: shell/shell.c shell/shell.h lib/stdint.h 		\
 	lib/stdio.h kernel/debug.h lib/user/syscall.h lib/string.h	\
-	fs/file.h
+	fs/file.h fs/fs.h shell/buildin_cmd.h
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD_DIR)/buildin_cmd.o: shell/buildin_cmd.c shell/buildin_cmd.h 	\
+	lib/stdint.h lib/string.h fs/fs.h fs/dir.h kernel/debug.h	\
+	lib/user/syscall.h
 	$(CC) $(CFLAGS) $< -o $@
 
 
