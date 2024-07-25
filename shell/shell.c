@@ -8,23 +8,22 @@
 #include "buildin_cmd.h"
 
 
-
 #define cmd_len 128
 #define MAX_ARG_NR 16
 
 char* argv [MAX_ARG_NR];
 int32_t argc = -1;
 
-//storage the enter command 
-static char cmd_line[MAX_PATH_LEN]  = {0};
-//
-char final_path[MAX_PATH_LEN]  = {0};
+static char cmd_line[MAX_PATH_LEN]  = {0};		//storage the enter command 
 
-//current working directory cache
-char cwd_cache[64] = {0};
 
-//print prompt
-void print_prompt(void){
+char final_path[MAX_PATH_LEN] ;				//clear path  buffer
+
+
+char cwd_cache[MAX_PATH_LEN] = {0};			//current working directory cache
+
+
+void print_prompt(void){				//print prompt
 	printf("[lance@localhost %s]$ ",cwd_cache);
 }
 
@@ -122,15 +121,31 @@ void my_shell(void){
 		argc = cmd_parse(cmd_line , argv , ' ');
 		if (argc == -1){
 			printf("num of arguments exceed %d\n" ,MAX_ARG_NR);
+			continue;
 		}
-		int32_t arg_idx = 0 ;
-		char buf[MAX_PATH_LEN] = {0};
-		while(arg_idx < argc){
-			make_clear_abs_path(argv[arg_idx] , buf);
-			printf("%s -> %s\n" , argv[arg_idx] , buf);
-			arg_idx++;
+		
+		if (!strcmp("ls" , argv[0])){
+			buildin_ls(argc , argv);
+		}else if (!strcmp("cd" , argv[0])){
+			if (buildin_cd(argc , argv) != NULL){
+				memset(cwd_cache , 0 , MAX_PATH_LEN);
+				strcpy(cwd_cache , final_path);
+			}
+		}else if (!strcmp("pwd" , argv[0])){
+			buildin_pwd(argc , argv);
+		}else if (!strcmp("ps" , argv[0])){
+			buildin_ps(argc , argv);
+		}else if (!strcmp("clear" , argv[0])){
+			buildin_clear(argc , argv);
+		}else if (!strcmp("mkdir" , argv[0])){
+			buildin_mkdir(argc , argv);
+		}else if (!strcmp("rmdir" ,argv[0])){
+			buildin_rmdir(argc , argv);
+		}else if (!strcmp("rm" , argv[0])){
+			buildin_rm(argc , argv);
+		}else {
+			printf("external command\n");
 		}
-		printf("\n");
 	}
 	PANIC("my_shell: should not be here");
 }

@@ -162,7 +162,7 @@ $(BUILD_DIR)/shell.o: shell/shell.c shell/shell.h lib/stdint.h 		\
 
 $(BUILD_DIR)/buildin_cmd.o: shell/buildin_cmd.c shell/buildin_cmd.h 	\
 	lib/stdint.h lib/string.h fs/fs.h fs/dir.h kernel/debug.h	\
-	lib/user/syscall.h
+	lib/user/syscall.h kernel/global.h lib/stdio.h
 	$(CC) $(CFLAGS) $< -o $@
 
 
