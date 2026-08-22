@@ -1,4 +1,4 @@
-![logo](./image/logo.png)
+![logo](./assets/logo.png)
 
 > 参考《操作系统真象还原》和Linux早期源码 ，从零到一实现一个类Unix小型操作系统。
 
@@ -12,11 +12,12 @@
 
 # 效果展示：
 
-![show](./image/show.gif)
+![show](./assets/show.gif)
 
 # 使用指南：
 
 (环境配置：bochs2.6.2+gcc3.4+nasm2.15.05)
+
 
 ### 1.克隆到本地
 
@@ -40,9 +41,6 @@ make hd
 
 使用bochs虚拟机运行操作系统 (注意：不支持arm架构)
 
-~~~bash
-bin/bochs
-~~~
 
 # 贡献：
 

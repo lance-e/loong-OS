@@ -1,8 +1,51 @@
-BUILD_DIR = ./build
+.DEFAULT_GOAL := help
+
+.PHONY : help
+
+help:
+	@echo "准备工具： make prepare"
+	@echo "编译镜像： make build"
+	@echo "写入镜像： make hd"
+	@echo "完整执行： make all"
+
+LOONG_ROOT := $(realpath $(dir $(firstword $(MAKEFILE_LIST))))
+TOOLCHAIN_ROOT := $(LOONG_ROOT)/.toolchains
+TOOLCHAIN_BIN := $(TOOLCHAIN_ROOT)/bin
+TOOLCHAIN_SRC := $(TOOLCHAIN_ROOT)/src
+TOOLCHAIN_OPT := $(TOOLCHAIN_ROOT)/opt
+
+GCC34_ROOT := $(TOOLCHAIN_OPT)/gcc-3.4
+GCC34_EXEC_DIR := $(GCC34_ROOT)/usr/lib/gcc/x86_64-linux-gnu/3.4.6
+NASM_PREFIX := $(TOOLCHAIN_OPT)/nasm-2.15.05
+BOCHS_PREFIX := $(TOOLCHAIN_OPT)/bochs-2.6.2
+
+GCC_BASE_DEB := $(LOONG_ROOT)/gcc3.4lib/gcc-3.4-base_3.4.6-6ubuntu3_amd64.deb
+GCC_CPP_DEB := $(LOONG_ROOT)/gcc3.4lib/cpp-3.4_3.4.6-6ubuntu3_amd64.deb
+GCC_DEB := $(LOONG_ROOT)/gcc3.4lib/gcc-3.4_3.4.6-6ubuntu3_amd64.deb
+GCC_DEBS := $(GCC_BASE_DEB) $(GCC_CPP_DEB) $(GCC_DEB)
+NASM_ARCHIVE := $(LOONG_ROOT)/tool/nasm-2.15.05.tar.gz
+BOCHS_ARCHIVE := $(LOONG_ROOT)/tool/bochs-2.6.2.tar.gz
+NASM_SOURCE := $(TOOLCHAIN_SRC)/nasm-2.15.05
+BOCHS_SOURCE := $(TOOLCHAIN_SRC)/bochs-2.6.2
+
+BUILD_DIR = $(LOONG_ROOT)/build
 ENTRY_POINT = 0xc0001500
-AS = nasm 
-CC = gcc
+AS := $(TOOLCHAIN_BIN)/nasm
+CC := env \
+	  GCC_EXEC_PREFIX="$(GCC34_ROOT)/usr/lib/gcc/" \
+	  COMPILER_PATH="$(GCC34_EXEC_DIR)" \
+	  $(TOOLCHAIN_BIN)/gcc 
 LD = ld
+BOCHS := $(TOOLCHAIN_BIN)/bochs
+# 编译 NASM 和 Bochs 时使用宿主机编译器
+HOST_CC ?= /usr/bin/gcc
+HOST_CXX ?= /usr/bin/g++
+JOBS ?= $(shell nproc 2>/dev/null || echo 1)
+
+export LOONG_ROOT
+export BXSHARE := $(BOCHS_PREFIX)/share/bochs
+
+
 LIB = -I lib/ -I lib/kernel/ -I lib/user/ -I kernel/ -I device/ -I thread/ -I userprog/ -I fs/	\
       -I shell/
 ASFLAGS = -f elf
@@ -193,14 +236,82 @@ $(BUILD_DIR)/switch.o : thread/switch.S
 $(BUILD_DIR)/kernel.bin : $(OBJS)
 	$(LD) $(LDFLAGS) $^ -o $@
 
-.PHONY : mk_dir hd clean all
+.PHONY: mk_dir
 
 mk_dir:
 	if [ ! -d $(BUILD_DIR)  ]; then mkdir $(BUILD_DIR);fi
 
+.PHONY: prepare-gcc
+
+prepare-gcc:
+	@set -eu; \
+	echo "[prepare] 重新准备 GCC 3.4"; \
+	mkdir -p "$(TOOLCHAIN_BIN)" "$(TOOLCHAIN_OPT)"; \
+	rm -rf "$(GCC34_ROOT)"; \
+	mkdir -p "$(GCC34_ROOT)"; \
+	for deb in $(GCC_DEBS); do \
+			ar p "$$deb" data.tar.gz | tar -xzf - -C "$(GCC34_ROOT)"; \
+	done; \
+	ln -sfn ../opt/gcc-3.4/usr/bin/gcc-3.4 "$(TOOLCHAIN_BIN)/gcc"; \
+	ln -sfn ../opt/gcc-3.4/usr/bin/cpp-3.4 "$(TOOLCHAIN_BIN)/cpp"; \
+	test -x "$(TOOLCHAIN_BIN)/gcc"; \
+	test -x "$(GCC34_ROOT)/usr/lib/gcc/x86_64-linux-gnu/3.4.6/cc1"
+
+.PHONY: prepare-nasm
+
+prepare-nasm:
+	@set -eu; \
+	echo "[prepare] 重新编译 NASM 2.15.05"; \
+	mkdir -p "$(TOOLCHAIN_BIN)" "$(TOOLCHAIN_SRC)" "$(TOOLCHAIN_OPT)"; \
+	rm -rf "$(NASM_SOURCE)" "$(NASM_PREFIX)"; \
+	tar -xzf "$(NASM_ARCHIVE)" -C "$(TOOLCHAIN_SRC)"; \
+	cd "$(NASM_SOURCE)" && \
+			CC="$(HOST_CC)" ./configure --prefix="$(NASM_PREFIX)"; \
+	$(MAKE) -C "$(NASM_SOURCE)" -j"$(JOBS)"; \
+	$(MAKE) -C "$(NASM_SOURCE)" install; \
+	ln -sfn ../opt/nasm-2.15.05/bin/nasm "$(TOOLCHAIN_BIN)/nasm"; \
+	test -x "$(TOOLCHAIN_BIN)/nasm"
+
+
+.PHONY: prepare-bochs
+
+prepare-bochs:
+	@set -eu; \
+	echo "[prepare] 重新编译 Bochs 2.6.2"; \
+	mkdir -p "$(TOOLCHAIN_BIN)" "$(TOOLCHAIN_SRC)" "$(TOOLCHAIN_OPT)"; \
+	rm -rf "$(BOCHS_SOURCE)" "$(BOCHS_PREFIX)"; \
+	tar -xzf "$(BOCHS_ARCHIVE)" -C "$(TOOLCHAIN_SRC)"; \
+	cd "$(BOCHS_SOURCE)" && \
+			CC="$(HOST_CC)" CXX="$(HOST_CXX)" ./configure \
+					--prefix="$(BOCHS_PREFIX)" \
+					--enable-debugger \
+					--enable-disasm \
+					--enable-iodebug \
+					--enable-x86-debugger \
+					--with-x \
+					--with-x11 \
+					--disable-plugins; \
+	$(MAKE) -C "$(BOCHS_SOURCE)" -j"$(JOBS)"; \
+	$(MAKE) -C "$(BOCHS_SOURCE)" install; \
+	ln -sfn ../opt/bochs-2.6.2/bin/bochs "$(TOOLCHAIN_BIN)/bochs"; \
+	ln -sfn ../opt/bochs-2.6.2/bin/bximage "$(TOOLCHAIN_BIN)/bximage"; \
+	ln -sfn ../opt/bochs-2.6.2/bin/bxcommit "$(TOOLCHAIN_BIN)/bxcommit"; \
+	test -x "$(TOOLCHAIN_BIN)/bochs"; \
+	test -f "$(BXSHARE)/BIOS-bochs-latest"; \
+	test -f "$(BXSHARE)/VGABIOS-lgpl-latest"
+
+
+.PHONY: prepare
+
+prepare: mk_dir prepare-gcc prepare-nasm prepare-bochs
+	@echo "[prepare] 工具链重新编译完成"
+
+
+.PHONY : build hd clean all
+
 hd:
 	dd if=$(BUILD_DIR)/kernel.bin 	\
-	   of=./bin/hd60M.img		\
+	   of=./image/hd60M.img		\
 	   bs=512 count=200 seek=9 conv=notrunc
 
 clean:
@@ -208,4 +319,9 @@ clean:
 
 build: $(BUILD_DIR)/kernel.bin
 
-all: mk_dir build hd
+all: prepare build hd
+
+.PHONY : run 
+
+run: 
+	"$(BOCHS)" 
